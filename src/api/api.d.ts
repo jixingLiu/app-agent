@@ -1,0 +1,3 @@
+interface paramsAgentEmployees {
+  agentId: string,
+}

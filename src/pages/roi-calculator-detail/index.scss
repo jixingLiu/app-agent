@@ -1,0 +1,30 @@
+page {
+  background-color: white;
+}
+.border-b-dotted {
+  border-bottom-style: dashed;
+}
+
+.nut-table__main__head {
+  background-color: #f5f6f7;
+  font-size: 12px;
+
+}
+.reverse {
+  .nut-table__main__body {
+    .nut-table__main__body__tr {
+      &:nth-child(-n + 15) {
+        background-color: #fca5a5;
+      }
+    }
+  }
+}
+.no-reverse {
+  .nut-table__main__body {
+    .nut-table__main__body__tr {
+      &:nth-child(n + 15) {
+        background-color: #fca5a5;
+      }
+    }
+  }
+}
