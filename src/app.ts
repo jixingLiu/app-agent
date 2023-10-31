@@ -1,6 +1,7 @@
 import { PropsWithChildren } from 'react'
 import { useLaunch } from '@tarojs/taro'
 import './app.scss'
+import './assets/font/iconfont.css'
 import './guard/index'
 
 function App({ children }: PropsWithChildren) {

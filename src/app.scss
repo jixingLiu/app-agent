@@ -9,3 +9,20 @@ body {
   background-color: #f5f6f7;
 }
 
+
+
+.flex-1.nut-uploader {
+  .nut-uploader__upload,
+  .nut-uploader__preview {
+    width: 100% !important;
+    margin-right: 0!important;
+    .nut-uploader__preview-img {
+      width: 100% !important;
+      .taro-img__mode-aspectfit {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+  }
+}

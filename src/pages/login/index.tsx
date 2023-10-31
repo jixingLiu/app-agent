@@ -1,65 +1,158 @@
-import { useState } from "react";
-
-import { Button, Checkbox, Image } from "@nutui/nutui-react-taro";
-// import {} from  '@tarojs/components';
-import "./index.scss";
 import Taro from "@tarojs/taro";
+import { useRef, useState } from "react";
+import {
+  Form,
+  Input,
+  Button,
+  Checkbox,
+  Image,
+  CountDown,
+} from "@nutui/nutui-react-taro";
+import { login, loginSend } from "@/api/me";
+import "./index.scss";
 
-import LogoSvg from '@/assets/images/logo.svg'
-import React from "react";
+import LogoSvg from "@/assets/images/logo.svg";
 
 const Login = () => {
+  const [checked, setChecked] = useState<boolean>(true);
+  const envType = Taro.getEnv();
+  const [form] = Form.useForm();
 
-  const [checked, setChecked ]=  useState<boolean>(true)
-  const envType = Taro.getEnv()
+  const countDownRef = useRef<any>();
 
-  const handleGetPhoneNumber = (e) => {
-    
-    let { code } = e.detail
+  const [isSending, setIsSending] = useState<boolean>(false);
 
-    console.log(code, e.detail)
-    
+  const [formData, setFormData] = useState<loginParams>({
+    phone: "",
+    inputCode: "",
+  });
+  const onFinish = async (values) => {
+    let { phone, inputCode } = formData;
     if (!checked) {
-      Taro.showToast({title: '请先查看用户协议、隐私协议'})
+      Taro.showToast({ title: "请先查看用户协议、隐私协议" });
+      return;
+    }
+    if (!phone || !inputCode) {
+      Taro.showToast({ title: "请先输入用户名和验证码码！" });
       return
     }
-    // Taro.login({
-    //   success: function (res) {
-    //     if (res.code) {
-    //       console.log(res, 'res 登录成功')
-    //       //发起网络请求
-    //       // Taro.request({
-    //       //   url: 'https://test.com/onLogin',
-    //       //   data: {
-    //       //     code: res.code
-    //       //   }
-    //       // })
-    //     } else {
-    //       console.log('登录失败！' + res.errMsg)
-    //     }
-    //   }
-    // })
 
-  }
+    try {
+      const response = await login({ phone, inputCode });
+      if (response.code == 500) {
+        Taro.showModal({ title: "当前手机号未注册代理商，请与上级代理商联系" });
+        return;
+      }
+      const { msg, data } = response;
+      Taro.setStorageSync("token", msg);
+      Taro.setStorage({
+        key: "userInfo",
+        data: data,
+      });
+      Taro.switchTab({
+        url: "/pages/install/index",
+      });
+    } catch (error) {
+      console.error("登录失败", error);
+      Taro.showToast({ title: "登录失败，请重试" });
+    }
+  };
 
-  
+  const getVerifyPhoneCode = () => {
+    console.log(formData.phone);
+    if (!formData.phone) {
+      Taro.showToast({ title: "请输入手机号" });
+      return;
+    }
+    setIsSending(true);
+    loginSend({ phone: formData.phone }).then(() => {
+      countDownRef.current?.start();
+    });
+  };
+
   return (
-    <div className={`flex pt-[280px] box-border flex-col ${envType === 'WEB' ? 'h-full' : 'h-screen'} bg-white  px-4` }>
+    <div
+      className={`flex pt-[96px] box-border flex-col ${
+        envType === "WEB" ? "h-full" : "h-screen"
+      } bg-white  px-4`}
+    >
       <div>
-        <div className="flex justify-center">
-          <Image src={LogoSvg} width={'100%'} />
+        <div className="flex justify-centertime={20000}">
+          <Image src={LogoSvg} width={"100%"} />
         </div>
-        
-        <div className="pt-9">
-          <Button block type="primary" open-type="getPhoneNumber" onGetPhoneNumber={handleGetPhoneNumber}>手机号一键登录</Button>
 
-          <div className="flex items-center justify-center pt-6">
-            <Checkbox checked={checked} onChange={(val) => setChecked(val)}></Checkbox>
-            <div className="text-xs flex items-center text-slate-600">我已经阅读并同意 
-              <span className="text-red-600">雄瑞用户协议</span>、
-              <span className="text-red-600">隐私协议</span>
+        <div className="pt-4">
+          <Form
+            labelPosition="top"
+            footer={
+              <Button block type="primary" onClick={onFinish}>
+                提交
+              </Button>
+            }
+          >
+            <Form.Item label="联系电话" name="phone">
+              <Input
+                maxLength={13}
+                value={formData.phone}
+                onChange={(value) => {
+                  setFormData({
+                    ...formData,
+                    phone: value
+                  })
+                }}
+                placeholder="请输入电话号码"
+                type="mobile"
+              />
+            </Form.Item>
+            <Form.Item label="验证码" name="inputCode">
+              <div className="flex justify-between items-center">
+                <Input
+                  onChange={(value) => {
+                    setFormData({
+                      ...formData,
+                      inputCode: value
+                    })
+                  }}
+                  value={formData.inputCode}
+                  maxLength={6}
+                  placeholder="短信验证码"
+                  type="number"
+                />
+                <Button
+                  type="primary"
+                  size="small"
+                  onClick={getVerifyPhoneCode}
+                >
+                  {isSending ? (
+                    <CountDown
+                      style={{color: '#fff'}}
+                      onEnd={() => {
+                        setIsSending(false);
+                      }}
+                      autoStart={false}
+                      ref={countDownRef}
+                      time={60 * 2000}
+                      format="剩余ss秒"
+                    />
+                  ) : (
+                    "获取验证码"
+                  )}
+                </Button>
+              </div>
+            </Form.Item>
+
+            <div className="flex items-center justify-center pt-6">
+              <Checkbox
+                checked={checked}
+                onChange={(val) => setChecked(val)}
+              ></Checkbox>
+              <div className="text-xs flex items-center text-slate-600">
+                我已经阅读并同意
+                <span className="text-red-600">雄瑞用户协议</span>、
+                <span className="text-red-600">隐私协议</span>
+              </div>
             </div>
-          </div>
+          </Form>
         </div>
       </div>
     </div>
@@ -67,5 +160,3 @@ const Login = () => {
 };
 
 export default Login;
-
-

@@ -1,4 +1,4 @@
-.test {
-  @apply flex items-center justify-center h-[300px] w-[300px] rounded-[40px] bg-[#123456] bg-opacity-[0.54];
-  @apply text-[#ffffff] after:content-['@apply_classes'] #{!important};
-}
+.index-wrap  {
+    background: url('https://gd-hbimg.huaban.com/f404999a84f34c103d91dc4388aaded671706a385a1d7-8trTqi_fw658webp') no-repeat top;
+    background-size: cover;
+  }

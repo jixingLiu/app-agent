@@ -1,16 +1,22 @@
 export default defineAppConfig({
   pages: [
+    'pages/index/index',
     'pages/login/index',
-    
+    'pages/employees/index',
     'pages/install/index',
     'pages/install-form/index',
-    'pages/employees/index',
-    'pages/index/index',
-   
     'pages/mine/index',
     'pages/roi-calculator/index',
     'pages/roi-calculator-detail/index',
+    'pages/apply/index'
   ],
+  requiredBackgroundModes: ['audio', 'location'],
+  "permission": {
+    "scope.userLocation": {
+      "desc": "你的位置信息将用于获取附近的服务，是否允许？"
+    }
+  },
+  
   window: {
     backgroundTextStyle: 'light',
     navigationBarBackgroundColor: '#f5f6f7',

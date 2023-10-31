@@ -2,6 +2,7 @@ import Taro from '@tarojs/taro';
 import  { useState, useEffect, useRef } from 'react';
 import { throttle, } from 'lodash';
 import { Sticky } from '@nutui/nutui-react-taro'
+
 import ContractData from '../ContractData';
 import LoanData from '../LoanData'
 import ProductCost from '../ProductCost'

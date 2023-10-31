@@ -98,6 +98,10 @@ const config = {
   h5: {
     publicPath: '/',
     staticDirectory: 'static',
+    router: {
+      mode: 'browser',
+      basename: '/agent-app/', // 在这里设置你的路由前缀
+    },
     postcss: {
       autoprefixer: {
         enable: true,

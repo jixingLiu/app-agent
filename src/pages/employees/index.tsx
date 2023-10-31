@@ -12,6 +12,8 @@ const Employees = () => {
 
   const formRef = useRef<any>(null)
 
+
+
   const [employees, setEmployees] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [checked, setChecked] = useState<any[]>([])
@@ -86,14 +88,14 @@ const Employees = () => {
             <div className='px-4'>
               {
                 employees.map(item => (
-                  <div className='rounded-md bg-white px-3 py-4 shadow-md mb-4' key={item.id}>
+                  <div className='rounded-md bg-white px-2 py-4 shadow-md mb-4' key={item.id}>
                     <div className='flex justify-between gap-2'>
                       <div className='flex items-center gap-1'>
                         <Checkbox value={item.id}></Checkbox>
                         <div className='text-sm'>
-                          <div className='text-slate-800 mb-2'>
+                          <div className='text-slate-800 mb-2 flex items-center gap-2'>
                             <span>{item.name}</span>
-                            <span className='text-xs ml-2 items-baseline text-yellow-600'>{ item.type && EnumEmployeesMap[item.type] }</span>
+                            <span className='text-xs items-baseline text-yellow-600'>{ item.type && EnumEmployeesMap[item.type] }</span>
                           </div>
                           <div className='text-xs text-slate-600'>
                             {item.phone}
@@ -121,14 +123,14 @@ const Employees = () => {
                     </div>
                     <Divider style={{borderColor: '#f5f6f7'}} />
                     <div className='flex justify-between text-xs text-center text-red-600'>
-                      <div className='flex-1 flex items-center justify-center gap-1'>
+                      <div className='flex-1 flex items-center justify-center gap-2'>
                         <Setting />
-                        分配权限
+                        <span>分配权限</span>
                       </div>
                       <Divider direction='vertical' style={{borderColor: '#f5f6f7', height: '16px'}} />
-                      <div className='flex-1 flex items-center justify-center gap-1' onClick={() => formRef.current.openPopup(item)}>
+                      <div className='flex-1 flex items-center justify-center gap-2' onClick={() => formRef.current.openPopup(item)}>
                         <Edit />
-                        编辑
+                        <span>编辑</span>
                       </div>
                     </div>
                   </div>
@@ -137,11 +139,9 @@ const Employees = () => {
             </div>
           </Checkbox.Group>
           <Sticky threshold={0} position="bottom">
-            <div className='px-4'>
-              <div className='py-2 px-2 shadow-md rounded-md bg-white flex gap-6 items-center justify-center'>
-                <Button className='flex-1' type='primary' fill='outline' onClick={handleDelete}>+ 删除</Button>
-                <Button className='flex-1' onClick={() => formRef.current.openPopup()}>+ 新增</Button>
-              </div>
+            <div className='py-2 px-2 shadow-md rounded-md bg-white flex gap-6 items-center justify-center'>
+              <Button className='flex-1' type='primary' fill='outline' onClick={handleDelete}>+ 删除</Button>
+              <Button className='flex-1' onClick={() => formRef.current.openPopup()}>+ 新增</Button>
             </div>
           </Sticky>
           </>

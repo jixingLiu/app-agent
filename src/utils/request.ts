@@ -11,29 +11,35 @@ const errorCode = {
 const envConfig = {
   development: {
     API_BASE_URL: 'http://162.14.70.114:8080', // 开发环境的 API 地址
+    //本机测试
+    //API_BASE_URL: 'http://127.0.0.1:8080'
   },
   production: {
-    API_BASE_URL: 'https://api.example.com', // 生产环境的 API 地址
+    API_BASE_URL: 'http://162.14.70.114:8080/prod-api/', // 生产环境的 API 地址
   },
 };
 
 // 创建Taro请求实例
-const request = (options) => {
-  // const token = Taro.getStorageSync('token');
+const request = (options): Promise<any> => {
+  const token = Taro.getStorageSync('token');
+  // if (!token) {
+  //   Taro.navigateTo({
+  //     url: '/pages/login/index'
+  //   })
+  // }
 
   // 设置请求头
   const headers = {
     'Content-Type': 'application/json;charset=utf-8',
   };
 
-  // if (token) {
-  //   headers['Authorization'] = 'Bearer ' + token;
-  // }
+  if (token) {
+    headers['Authorization'] = 'Bearer ' + encodeURIComponent(token);
+  }
 
   const { url, data, method = 'GET' } = options;
   let env = process.env.NODE_ENV || 'development';
-  console.log(   envConfig[env].API_BASE_URL + url, 'process.env.NODE_ENV')
-
+  // console.log(   envConfig[env].API_BASE_URL + url, 'process.env.NODE_ENV')
   return Taro.request({
     url: envConfig[env].API_BASE_URL + url,
     data,
@@ -42,7 +48,7 @@ const request = (options) => {
   })
     .then((response) => {
       const { statusCode, data } = response;
-      console.log(response, 'response')
+      // console.log(response, 'response')
       if (statusCode === 200) {
         return data;
       } else {

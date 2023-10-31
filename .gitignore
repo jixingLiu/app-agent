@@ -10,7 +10,10 @@
 /.idea/*
 /.vscode/*
 /.hbuilderx/*
+.swc/*
 
 package-lock.json
 yarn.lock
-
+pnpm-lock.yaml
+/dist/*
+.swc

@@ -41,7 +41,7 @@ const UserForm = (props: IProps, ref) => {
     <Popup
       style={{width: '80%'}}
       lockScroll visible={showBasic} onClose={() => setShowBasic(false)}>
-      <div className='bg-white rounded-md shadow-md min-w-2/3 w-full py-4 py-2'>
+      <div className='bg-white rounded-md shadow-md min-w-2/3 w-full py-4'>
         <div className=' rounded-b-md text-center text-sm leading-8 text-gray-800'>编辑信息</div>
         <Form
           initialValues={item}
@@ -52,16 +52,13 @@ const UserForm = (props: IProps, ref) => {
               Taro.showToast({title: '请先填写表单', icon: 'error'})
               return
             }
-            let { name, phone, pssword, type } = values
+            let { name, phone, type } = values
             let errorText = ''
             if (!name) {
               errorText += '姓名 '
             }
             if (!phone) {
               errorText += '电话 '
-            }
-            if (!pssword) {
-              errorText += '密码 '
             }
             if (!type) {
               errorText += '管理员 '
@@ -87,13 +84,17 @@ const UserForm = (props: IProps, ref) => {
           <Form.Item name='phone' label='电话号码'>
             <Input placeholder='请输入电话号码' type='mobile' maxLength={11} />
           </Form.Item>
-          <Form.Item name='pssword' label='密码'>
+          {/* <Form.Item name='pssword' label='密码'>
             <Input placeholder='请输入密码' type='password' maxLength={18} />
-          </Form.Item>
+          </Form.Item> */}
           <Form.Item name='type' label='是否管理员'>
             <Radio.Group direction="horizontal">
-              <Radio value="subAdmin">是</Radio>
-              <Radio value="normalEmployee">否</Radio>
+              <Radio value="subAdmin">
+                <span className='ml-2'>是</span>
+              </Radio>
+              <Radio value="normalEmployee">
+                <span className='ml-2'>否</span>
+              </Radio>
             </Radio.Group>
           </Form.Item>
         </Form>
