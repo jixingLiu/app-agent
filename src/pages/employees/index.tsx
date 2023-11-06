@@ -7,12 +7,13 @@ import UserForm from './components/UserForm';
 
 import { EnumEmployeesMap } from '@/constants/index'
 import Taro from '@tarojs/taro';
+import { fail } from 'assert';
 
 const Employees = () => {
 
   const formRef = useRef<any>(null)
 
-
+  const [userInfo, setUserInfo] = useState<any>({})
 
   const [employees, setEmployees] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
@@ -78,6 +79,17 @@ const Employees = () => {
     getList()
     // formRef.current.openPopup()
   }, [])
+
+  useEffect(() => {
+    Taro.getStorage({
+      key: 'userInfo',
+      success: (res: any) => {
+        let { data } = res
+        setUserInfo(data)
+      },
+      fail: (error) => {console.log(error)}
+    })
+  }, [])
   return (
     <div className='bg-[#f5f6f7] h-full py-2'>
       {
@@ -85,19 +97,23 @@ const Employees = () => {
         (
           <>
           <Checkbox.Group value={checked} onChange={setChecked}>
-            <div className='px-4'>
+            <div className='px-2'>
               {
                 employees.map(item => (
-                  <div className='rounded-md bg-white px-2 py-4 shadow-md mb-4' key={item.id}>
+                  <div className='rounded-md bg-white px-2 py-4 shadow-md mb-2' key={item.id}>
                     <div className='flex justify-between gap-2'>
-                      <div className='flex items-center gap-1'>
+                      <div className='flex items-center'>
                         <Checkbox value={item.id}></Checkbox>
                         <div className='text-sm'>
                           <div className='text-slate-800 mb-2 flex items-center gap-2'>
                             <span>{item.name}</span>
                             <span className='text-xs items-baseline text-yellow-600'>{ item.type && EnumEmployeesMap[item.type] }</span>
                           </div>
-                          <div className='text-xs text-slate-600'>
+                          <div className='text-xs text-slate-600' onClick={() => {
+                            Taro.makePhoneCall({
+                              phoneNumber: item.phone,
+                            })
+                          }}>
                             {item.phone}
                           </div>
                         </div>
@@ -128,7 +144,15 @@ const Employees = () => {
                         <span>分配权限</span>
                       </div>
                       <Divider direction='vertical' style={{borderColor: '#f5f6f7', height: '16px'}} />
-                      <div className='flex-1 flex items-center justify-center gap-2' onClick={() => formRef.current.openPopup(item)}>
+                      <div className='flex-1 flex items-center justify-center gap-2' onClick={() => {
+                        if (userInfo.type !== 'subAdmin') {
+                          Taro.showToast({
+                            title: '权限不足',
+                          })
+                          return
+                        }
+                        formRef.current.openPopup(item)
+                      }}>
                         <Edit />
                         <span>编辑</span>
                       </div>

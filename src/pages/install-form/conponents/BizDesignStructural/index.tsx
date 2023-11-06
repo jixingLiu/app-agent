@@ -10,16 +10,18 @@ import { multipleUploadResult } from "../../utils/index";
 interface IProps {
   item: any;
   id: string | number;
+  detailData: any,
   onConfim: (values: any, apiName: string) => void;
 }
 
 const BizDesignStructural = (props: IProps) => {
-  let { item, onConfim } = props;
+  let { item, id, detailData, onConfim } = props;
   const uploadUrl = "http://162.14.70.114:8080";
 
   const [form] = Form.useForm();
 
   const [formData, setFormData] = useState<any>({});
+  const [isEdit, setIsEdit] = useState<boolean>(false);
 
   const updateFormData = (key: string, value: any) => {
     const updatedData = { ...formData, [key]: value };
@@ -28,12 +30,16 @@ const BizDesignStructural = (props: IProps) => {
   };
 
   useEffect(() => {
-    setFormData(Object.assign(item || {}));
+    setFormData(Object.assign(item || {}, {id}));
     form.setFieldsValue({
       ...(item || {}),
+      id,
     });
   }, [item]);
 
+  useEffect(() => {
+    setIsEdit(['design'].includes(detailData?.state))
+  }, [detailData?.state])
 
   return (
     <div>
@@ -42,13 +48,12 @@ const BizDesignStructural = (props: IProps) => {
         divider
         initialValues={formData}
         form={form}
-        onFinish={(values) => {
-          onConfim(values, 'updateBizDesignStructural')
-        }}
-        footer={
+        footer={  isEdit &&
           <>
-            <Button formType="submit" block type="primary">
-              提交
+            <Button formType="submit" block type="primary" onClick={() => {
+              onConfim(formData, 'updateBizDesignStructural')
+            }}>
+              保存
             </Button>
           </>
         }
@@ -70,6 +75,7 @@ const BizDesignStructural = (props: IProps) => {
                   method="post"
                   name="files"
                   maxCount={5}
+                  disabled={!isEdit}
                   multiple={true}
                   onSuccess={(param) => {
                     let fileLists = multipleUploadResult(param as any);

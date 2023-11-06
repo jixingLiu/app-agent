@@ -8,7 +8,8 @@ export default defineAppConfig({
     'pages/mine/index',
     'pages/roi-calculator/index',
     'pages/roi-calculator-detail/index',
-    'pages/apply/index'
+    'pages/apply/index',
+    'pages/article/index'
   ],
   requiredBackgroundModes: ['audio', 'location'],
   "permission": {

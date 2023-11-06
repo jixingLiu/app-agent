@@ -6,6 +6,9 @@ import Taro, { useRouter } from "@tarojs/taro";
 // import Anchor from '@/components/Anchor';
 import StepTabs from "./conponents/StepTabs";
 import {
+  getBizInstallApplication,
+  updateInstall,
+
   getBizSignLoan,
   updateBizSignLoan,
 
@@ -50,7 +53,8 @@ let ConfimApiMap = {
 type ColumnItem = {
   label: string;
   value: string;
-  parent?: string;
+  state?: string[],
+  disabled?: boolean;
 };
 
 // 定义数据的类型
@@ -65,6 +69,7 @@ const InstallForm = () => {
   const headerRef = useRef<HTMLDivElement | null>(null);
 
   const [isLoadData, setIsLoadData] = useState<boolean>(false)
+  const [detailData, setDetailData] = useState<any>({})
 
   const columns: ColumnsData = [
     {
@@ -104,6 +109,35 @@ const InstallForm = () => {
       value: "BizCheckGridConnection",
     },
   ];
+
+  const AllStateMap = {
+    acceptance: {
+      value: '受理中',
+      className: 'rounded-full leading-5 h-5 px-2 bg-blue-500'
+    },
+    measure: {
+      value: '测量中',
+      className: 'rounded-full leading-5 h-5 px-2 bg-blue-500'
+    },
+    design: {
+      value: '设计中',
+      className: 'rounded-full leading-5 h-5 px-2 bg-blue-500'
+    },
+    check: {
+      value: '验收中',
+      className: 'rounded-full leading-5 h-5 px-2 bg-blue-500'
+    },
+    complete: {
+      value: '完成',
+      className: 'rounded-full leading-5 h-5 px-2 bg-blue-500'
+    },
+    abandon: {
+      value: '废弃',
+      className: 'rounded-full leading-5 h-5 px-2 bg-red-500'
+    },
+    
+  }
+  
   const [projectStates, setProjectStates] = useState<Object>({
       BizSignLoan: null,
       BizSignProductCost: null,
@@ -120,6 +154,11 @@ const InstallForm = () => {
   const getData = () => {
     let params = {id: id}
     setIsLoadData(false)
+    getBizInstallApplication(params).then(res => {
+      let { data } = res
+      setDetailData(data)
+
+    })
     Promise.all([
       getBizSignLoan(params), 
       getBizSignProductCost(params),
@@ -146,8 +185,18 @@ const InstallForm = () => {
 
   const onConfim = (values, name) => {
     ConfimApiMap[name](values).then(res => {
+      Taro.showToast({title: '保存成功', icon: 'success'})
+      setTimeout(() => {
+        getData()
+      }, 500)
+    })
+  }
+  const onUpdateizApplication = (values) => {
+    updateInstall(values).then(res => {
       Taro.showToast({title: '提交成功', icon: 'success'})
-      // getData()
+      setTimeout(() => {
+        getData()
+      }, 500)
     })
   }
 
@@ -157,19 +206,18 @@ const InstallForm = () => {
 
   return (
     <div className="flex flex-col min-h-screen" id="wrapId" ref={containerRef}>
-      <div className="bg-[#f5f6f7] px-4 py-4" ref={headerRef} id="headerId">
-        <div className="bg-white rounded-md shadow-white px-4 py-4">
+      <div className="bg-[#f5f6f7] px-2 shadow-white py-4" ref={headerRef} id="headerId">
+        <div className="bg-white rounded-md shadow-white px-2 py-4">
           <div className="flex items-center justify-between gap-2">
             <div className="flex-1">
               <div className="flex justify-between mb-2">
-                <div className="text-md">LG0000111111</div>
+                <div className="text-md">LG{detailData.id}</div>
                 <div className="flex gap-1 text-xs text-white">
-                  <div className="rounded-full leading-5 h-5 px-2 bg-red-500">
-                    已签收
+                  {
+                    detailData?.state &&  <div className={AllStateMap[detailData?.state]?.className}>
+                   { AllStateMap[detailData?.state]?.value}
                   </div>
-                  <div className="rounded-full leading-5 h-5 px-2 bg-blue-500">
-                    征信受理
-                  </div>
+                  }
                 </div>
               </div>
               <div className="flex justify-between text-xs">
@@ -196,7 +244,7 @@ const InstallForm = () => {
         id="contentId"
         className="bg-white  flex-1"
       >
-        { isLoadData ? <StepTabs columns={columns} id={id} projectStates={projectStates} onConfim={onConfim}></StepTabs> : null }
+        { isLoadData ? <StepTabs onUpdateizApplication={onUpdateizApplication} columns={columns} detailData={detailData} id={id} projectStates={projectStates} onConfim={onConfim}></StepTabs> : null }
       </div>
     </div>
   );

@@ -6,16 +6,18 @@ import { multipleUploadResult } from "../../utils/index";
 interface IProps {
   item: any;
   id: string | number;
+  detailData: any,
   onConfim: (values: any, apiName: string) => void;
 }
 
 const BizElectricalDesign = (props: IProps) => {
-  let { item, onConfim } = props;
+  let { item, id, detailData, onConfim } = props;
   const uploadUrl = "http://162.14.70.114:8080";
 
   const [form] = Form.useForm();
 
   const [formData, setFormData] = useState<any>({});
+  const [isEdit, setIsEdit] = useState<boolean>(false);
 
   const updateFormData = (key: string, value: any) => {
     const updatedData = { ...formData, [key]: value };
@@ -25,11 +27,16 @@ const BizElectricalDesign = (props: IProps) => {
 
   console.log(item, "item");
   useEffect(() => {
-    setFormData(Object.assign(item || {}));
+    setFormData(Object.assign(item || {}, {id}));
     form.setFieldsValue({
       ...item,
+      id
     });
   }, [item]);
+
+  useEffect(() => {
+    setIsEdit(['check'].includes(detailData?.state))
+  }, [detailData?.state])
 
   return (
     <div>
@@ -38,7 +45,7 @@ const BizElectricalDesign = (props: IProps) => {
         divider
         initialValues={formData}
         form={form}
-        footer={
+        footer={ isEdit && 
           <>
             <Button
               onClick={(e) => {
@@ -47,9 +54,8 @@ const BizElectricalDesign = (props: IProps) => {
               }}
               formType="submit"
               block
-              type="primary"
             >
-              提交
+              保存
             </Button>
           </>
         }
@@ -76,6 +82,8 @@ const BizElectricalDesign = (props: IProps) => {
                         name="files"
                         maxCount={5}
                         multiple={true}
+                        disabled={!isEdit}
+                        value={subItem.images}
                         onSuccess={(param) => {
                           let fileLists = multipleUploadResult(param as any);
                           let values = formData.image.map((item) => {
@@ -91,18 +99,10 @@ const BizElectricalDesign = (props: IProps) => {
                                 return fromSubItem
                               })
                             }
-                            // if (item.name === itemImg.name) {
-                            //   return {
-                            //     ...item,
-                            //     images: fileLists,
-                            //   };
-                            // }
                             return item;
                           });
                           updateFormData('image', values)
                         }}
-                        // deletable={!item?.image?.length}
-                        // value={itemImg?.images}
                         uploadIcon={<Link />}
                       />
                     </div>

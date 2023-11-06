@@ -6,11 +6,14 @@ import { multipleUploadResult } from "../../utils/index";
 interface IProps {
   item: any;
   id: string | number;
+  detailData: any;
+  onUpdateizApplication?: (values: any) => void;
   onConfim: (values: any, apiName: string) => void;
 }
 
 const BizCheckGridConnection = (props: IProps) => {
-  let { item, onConfim } = props;
+  let { item, id, detailData, onConfim, onUpdateizApplication } = props;
+  const [isEdit, setIsEdit] = useState<boolean>(false);
   const uploadUrl = "http://162.14.70.114:8080";
 
   const [form] = Form.useForm();
@@ -24,11 +27,16 @@ const BizCheckGridConnection = (props: IProps) => {
   };
 
   useEffect(() => {
-    setFormData(Object.assign(item || {}));
+    setFormData(Object.assign(item || {}, { id }));
     form.setFieldsValue({
       ...item,
+      id,
     });
   }, [item]);
+
+  useEffect(() => {
+    setIsEdit(["check"].includes(detailData?.state));
+  }, [detailData?.state]);
 
   return (
     <div>
@@ -38,28 +46,52 @@ const BizCheckGridConnection = (props: IProps) => {
         initialValues={formData}
         form={form}
         footer={
-          <>
-            <Button
-              onClick={(e) => {
-                e.preventDefault();
-                onConfim(formData, "updateBizCheckGridConnection");
-              }}
-              formType="submit"
-              block
-              type="primary"
-            >
-              提交
-            </Button>
-          </>
+          isEdit && (
+            <>
+              <div className="w-full flex justify-between gap-4">
+                <Button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onConfim(formData, "updateBizCheckGridConnection");
+                    console.log(formData, "formData");
+                  }}
+                  formType="submit"
+                  className="flex-1"
+                >
+                  保存
+                </Button>
+                <Button
+                  onClick={() => {
+                    onUpdateizApplication &&
+                      onUpdateizApplication({
+                        ...(detailData || {}),
+                        subState: "approvaling",
+                      });
+                  }}
+                  formType="submit"
+                  className="flex-1"
+                  type="primary"
+                >
+                  提交
+                </Button>
+              </div>
+            </>
+          )
         }
       >
         <div className="mb-1">
           <Form.Item label="发电户号" name="powerAccount">
-            <Input placeholder="请输入发电户号" type="text" />
+            <Input
+              disabled={!isEdit}
+              placeholder="请输入发电户号"
+              type="text"
+              onChange={(value) => { updateFormData("powerAccount", value); }}
+            />
           </Form.Item>
           <Form.Item label="备案容量" name="recordCapacity">
             <div className="flex items-center">
               <Input
+                disabled={!isEdit}
                 value={formData.recordCapacity}
                 onChange={(value) => {
                   updateFormData("recordCapacity", value);
@@ -87,6 +119,7 @@ const BizCheckGridConnection = (props: IProps) => {
                   name="files"
                   maxCount={itemImg?.images?.length || 5}
                   multiple={true}
+                  disabled={!isEdit}
                   onSuccess={(param) => {
                     let fileLists = multipleUploadResult(param as any);
                     let values = formData.image.map((item) => {

@@ -10,22 +10,49 @@ import { multipleUploadResult } from "../../utils/index";
 import Taro from "@tarojs/taro";
 
 interface IProps {
+  id: string | number,
   item: any;
+  detailData: any,
   onConfim: (values: any, apiName: string) => void;
 }
 
 const BizCheckDevice = (props: IProps) => {
-  const { item, onConfim } = props;
+  const { item, id, detailData, onConfim } = props;
 
   const [form] = Form.useForm();
   const [formData, setFormData] = useState<any>({});
+  const [isEdit, setIsEdit] = useState<boolean>(false);
 
   useEffect(() => {
-    setFormData(Object.assign(item || {}));
+    if (!item.component?.length) {
+      let commonItem = {
+        serialNumber: "",
+        registrationNo: "",
+      }
+          
+      let newItem = {
+        ...item,
+        component: [commonItem],
+        dataStick: [commonItem],
+        inverter: [commonItem],
+      }
+      setFormData(Object.assign(newItem || {}, {id}));
+      form.setFieldsValue({
+        ...newItem,
+        id,
+      });
+      return
+    }
+    setFormData(Object.assign(item || {}, {id}));
+    
     form.setFieldsValue({
       ...item,
     });
   }, [item]);
+
+  useEffect(() => {
+    setIsEdit(['check'].includes(detailData?.state))
+  }, [detailData?.state])
 
   const handleUpdateData = (
     componentKey: string,
@@ -65,6 +92,7 @@ const BizCheckDevice = (props: IProps) => {
           className="flex-1"
           key={`${key}-serialNumber`}
           // key={'serialNumber'}
+          disabled={!isEdit}
           value={item.serialNumber}
           onChange={(value) =>
             handleUpdateData(key, "serialNumber", index, value)
@@ -76,6 +104,7 @@ const BizCheckDevice = (props: IProps) => {
           className="flex-1"
           key={`${key}-registrationNo`}
           value={item.registrationNo}
+          disabled={!isEdit}
           onChange={(value) =>
             handleUpdateData(key, "registrationNo", index, value)
           }
@@ -96,7 +125,7 @@ const BizCheckDevice = (props: IProps) => {
         onFinish={(values) => {
           onConfim(values, "updateBizCheckDevice");
         }}
-        footer={
+        footer={ isEdit &&
           <>
             <Button formType="submit" block type="primary">
               提交

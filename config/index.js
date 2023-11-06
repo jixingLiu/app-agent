@@ -100,7 +100,7 @@ const config = {
     staticDirectory: 'static',
     router: {
       mode: 'browser',
-      basename: '/agent-app/', // 在这里设置你的路由前缀
+      basename: '/agent-app',
     },
     postcss: {
       autoprefixer: {
@@ -117,7 +117,10 @@ const config = {
         }
       }
     },
-    esnextModules: ['taro-ui']
+    esnextModules: ['taro-ui'],
+    devServer: {
+      port: 8888,
+    },
   },
   rn: {
     appName: 'taroDemo',

@@ -12,3 +12,18 @@ export function getAreaCode(data: getAreaCodeParams) {
   })
 }
 
+// 获取公告
+export function getNoticeList(data: noticeParams) {
+  return request({
+    url: '/system/notice/list',
+    method: 'get',
+    data: data
+  })
+}
+
+export function getNoticeById(id) {
+  return request({
+    url: `/system/notice/${id}`,
+    method: 'get',
+  })
+}

@@ -1,0 +1,23 @@
+.index-wrap  {
+  background: url('https://gd-hbimg.huaban.com/f404999a84f34c103d91dc4388aaded671706a385a1d7-8trTqi_fw658webp') no-repeat top;
+  background-size: cover;
+}
+.quill-content {
+  h1, h2 {
+    font-size: 30px;
+    font-weight: 500;
+  }
+  h3,h4,h5,h6 {
+    font-size: 28px;
+    font-weight: 500;
+  }
+  p,blockquotem, ul,li {
+    font-size: 24px;
+    margin-bottom: 16px;
+  }
+  img {
+    max-width: 100%;
+    border: 0;
+    margin: 4px 0;
+  }
+}

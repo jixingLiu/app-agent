@@ -10,7 +10,7 @@ const Apply = () => {
   const [visible, setIsVisible] = useState<boolean>(false);
   const [areaCodes, setAreaCodes] = useState<any[]>([]);
   const [address, setAddress] = useState<string>("");
-  const [userInfo, setUserInfo] = useState<any>({})
+  const [userInfo, setUserInfo] = useState<any>({});
 
   const [custmerCityData, setCustmerCityData] = useState<any[]>([]);
 
@@ -24,24 +24,27 @@ const Apply = () => {
   };
 
   const handleFinish = (values) => {
-    let params = Object.assign({
-      agentId: userInfo.agentId,
-      agentName: userInfo.agentName,
-    }, {
-      ...values,
-      address: `${address}${values.address}`,
-    });
-    updateInstall(params).then(res => {
+    let params = Object.assign(
+      {
+        agentId: userInfo.agentId,
+        agentName: userInfo.agentName,
+      },
+      {
+        ...values,
+        address: `${address}${values.address}`,
+      }
+    );
+    updateInstall(params).then((res) => {
       Taro.showToast({
-        title: '提交成功',
-        icon: 'success',
-        duration: 2000
-      })
+        title: "提交成功",
+        icon: "success",
+        duration: 2000,
+      });
       Taro.navigateTo({
-        url: '/pages/install/index'
-      })
-      console.log(res, '989')
-    })
+        url: "/pages/install/index",
+      });
+      console.log(res, "989");
+    });
   };
 
   const getAreaCodeList = async (params) => {
@@ -65,11 +68,11 @@ const Apply = () => {
     Taro.getStorage({
       key: "userInfo",
       success: (res) => {
-        let { data } = res
-        setUserInfo(data)
-      }
-    })
-  }, [])
+        let { data } = res;
+        setUserInfo(data);
+      },
+    });
+  }, []);
 
   return (
     <div className="px-4 py-2">
@@ -85,7 +88,7 @@ const Apply = () => {
           </Button>
         }
       >
-        <Form.Item  label="姓名" name="ownerName">
+        <Form.Item label="姓名" name="ownerName">
           <Input placeholder="请输入姓名" maxLength={6} />
         </Form.Item>
         <Form.Item label="手机号" name="ownerPhone">
@@ -99,7 +102,11 @@ const Apply = () => {
           }}
         >
           <div className=" text-slate-500" onClick={hanldeChooseAddree}>
-            {address || "选择安装区县"}
+            {address ? (
+              <span className="text-gray-800">{address}</span>
+            ) : (
+              <span className="text-slate-400">选择安装区县</span>
+            )}
           </div>
         </Form.Item>
         <Form.Item label="详细地址" name="address">

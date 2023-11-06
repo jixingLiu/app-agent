@@ -3,6 +3,9 @@ interface loginParams {
   phone: string,
 }
 
+interface createAnyParams {
+  [key:string]: any
+}
 
 interface verifyPhoneParams {
   phone: string,
@@ -38,4 +41,10 @@ interface getByIdParams {
 interface updateByIdParams {
   id: number | string,
   [key: string]: any;
+}
+
+interface noticeParams {
+  pageNum: number,
+  pageSize: number,
+  noticeType?: number | string
 }

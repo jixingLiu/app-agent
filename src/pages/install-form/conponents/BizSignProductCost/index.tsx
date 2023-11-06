@@ -6,6 +6,7 @@ import { uploadResult } from '../../utils/index'
 interface IProps {
   item: any;
   id: string | number;
+  detailData: any,
   onConfim: (values: any, apiName: string) => void
 }
 
@@ -13,11 +14,11 @@ type itemComponentType = {
   type: string,
   count: number,
   power: string,
-  [key:string]: any
+  [key:string]: any,
 }
 
 const BizSignProductCost = (props: IProps) => {
-  let { item, id, onConfim } = props;
+  let { item, id, detailData, onConfim } = props;
 
   const uploadUrl = "http://162.14.70.114:8080";
 
@@ -26,6 +27,7 @@ const BizSignProductCost = (props: IProps) => {
   const [formData, setFormData] = useState<any>({});
   const [componentType, setComponentType] = useState<itemComponentType>()
   const [visible, setVisible] = useState<boolean>(false)
+  const [isEdit, setIsEdit] = useState<boolean>(false);
 
   const updateFormData = (key:string, value: any) => {
     const updatedData = { ...formData, [key]: value };
@@ -34,10 +36,10 @@ const BizSignProductCost = (props: IProps) => {
   };
 
   useEffect(() => {
-    console.log(item, '989')
-    setFormData(Object.assign(item || {}));
+    setFormData(Object.assign(item || {}, {id:id}));
     form.setFieldsValue({
       ...(item || {}),
+      id: id
     });
     setComponentType(item?.component[0]||null)
   }, [item]);
@@ -46,8 +48,9 @@ const BizSignProductCost = (props: IProps) => {
     setComponentType( () => options[0])
     // todo setValue
   }
-
-
+  useEffect(() => {
+    setIsEdit(['acceptance'].includes(detailData?.state))
+  }, [detailData?.state])
 
   return (
     <div>
@@ -56,34 +59,44 @@ const BizSignProductCost = (props: IProps) => {
         divider 
         initialValues={formData} 
         form={form}
-        footer={
+        footer={ isEdit && (
           <>
             <Button
               onClick={(e) => {
                 e.preventDefault();
+                console.log(formData, 'formData')
                 onConfim(formData, "updateBizSignProductCost");
               }}
               formType="submit"
               block
-              type="primary"
             >
-              提交
+              保存
             </Button>
           </>
-        }
+        )}
       >
         <div className="mb-1 bg-white">
-          <Form.Item label="组件型号" name="financialProduct">
-          <div className='text-[#808080]' onClick={() => setVisible(!visible)}>
-            {componentType?.type || '请选择组件型号'}
-          </div>
+          <Form.Item label="组件型号" name="component">
+            {/* <div className='text-[#808080]' onClick={() => {
+              if (!isEdit) return
+              setVisible(!visible)
+            }}>
+              {componentType?.type || '请选择组件型号'}
+            </div> */}
+            <Input
+              onChange={(value) => {
+                updateFormData('component', value)
+              }}
+             disabled={!isEdit} placeholder="请输入组件型号" type="text" />
           </Form.Item>
           <Form.Item
             label="组件功率"
             name="username"
           >
             <div className='flex items-center'>
-              <Input placeholder="请输入组件功率" type="text" />
+              <Input  onChange={(value) => {
+                updateFormData('component', value)
+              }} disabled={!isEdit} placeholder="请输入组件功率" type="text" />
               <span className='text-xs text-[12px] text-slate-600'>KW</span>
             </div>
           </Form.Item>
@@ -91,14 +104,18 @@ const BizSignProductCost = (props: IProps) => {
             label="组件数量"
             name="username"
           >
-            <Input placeholder="请输入数量" type="number" />
+            <Input  onChange={(value) => {
+                updateFormData('component', value)
+              }} disabled={!isEdit} placeholder="请输入数量" type="number" />
           </Form.Item>
           <Form.Item
             label="逆变器功率"
             name="username"
           >
             <div className='flex items-center'>
-              <Input placeholder="请输入逆变器功率" type="text" />
+              <Input  onChange={(value) => {
+                updateFormData('component', value)
+              }} disabled={!isEdit} placeholder="请输入逆变器功率" type="text" />
               <span className='text-xs text-[12px] text-slate-600'>KW</span>
             </div>
           </Form.Item>
@@ -106,7 +123,9 @@ const BizSignProductCost = (props: IProps) => {
             label="逆变器数量"
             name="username"
           >
-            <Input placeholder="请输入逆变器数量" type="number" />
+            <Input  onChange={(value) => {
+                updateFormData('component', value)
+              }} disabled={!isEdit} placeholder="请输入逆变器数量" type="number" />
           </Form.Item>
           <Form.Item
             label="装机容量"
@@ -114,6 +133,8 @@ const BizSignProductCost = (props: IProps) => {
           >
             <div className='flex items-center'>
               <Input placeholder="请输入装机容量" type="number"
+                disabled={!isEdit}
+                
                 value={formData.installedCapacity} 
                 onChange={(value) => {
                   updateFormData('installedCapacity', value)
@@ -129,6 +150,7 @@ const BizSignProductCost = (props: IProps) => {
             <div className='flex items-center'>
               <Input 
                 value={formData.totalCost} 
+                disabled={!isEdit}
                 onChange={(value) => { 
                   updateFormData('totalCost', value)
                 }}
@@ -142,7 +164,8 @@ const BizSignProductCost = (props: IProps) => {
           >
             <div className='flex items-center'>
               <Input placeholder="请输入贷款额度" type="number" 
-                value={formData.loanAmount} 
+                value={formData.loanAmount}
+                disabled={!isEdit}
                 onChange={(value) => {
                   updateFormData('loanAmount', value)
                 }}
@@ -152,11 +175,11 @@ const BizSignProductCost = (props: IProps) => {
           </Form.Item>
           <div className="flex gap-2 px-2 pb-2">
             <Uploader
-              autoUpload={false}
               url={`${uploadUrl}/common/upload`}
               deletable={!item?.paymentVoucher}
               value={formatImageUrl(formData.paymentVoucher, "首付款凭证") as []}
               maxCount={1}
+              disabled={!isEdit}
               onSuccess={(param) => {
                 let fileLists = uploadResult(param as any)
                 updateFormData('paymentVoucher', fileLists[0].url)

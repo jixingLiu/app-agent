@@ -13,16 +13,19 @@ import Taro from "@tarojs/taro";
 interface IProps {
   item: any;
   id: string | number;
+  detailData: any;
+  onUpdateizApplication?: (values: any) => void;
   onConfim: (values: any, apiName: string) => void;
 }
 
 const BizSurveyHouse = (props: IProps) => {
-  let { item, onConfim } = props;
+  let { item, id, detailData, onConfim, onUpdateizApplication } = props;
   const uploadUrl = "http://162.14.70.114:8080";
 
   const [form] = Form.useForm();
 
   const [formData, setFormData] = useState<any>({});
+  const [isEdit, setIsEdit] = useState<boolean>(false);
 
   const updateFormData = (key: string, value: any) => {
     const updatedData = { ...formData, [key]: value };
@@ -30,13 +33,28 @@ const BizSurveyHouse = (props: IProps) => {
     form.setFieldsValue(updatedData);
   };
 
-
   useEffect(() => {
-    setFormData(Object.assign(item || {}));
+    setFormData(
+      Object.assign(
+        {
+          ...item,
+          ownerRequirement: item.ownerRequirement || "",
+          id:id,
+        } || {}
+      )
+    );
+    console.log(formData, '--id')
+
     form.setFieldsValue({
       ...item,
+      ownerRequirement: item.ownerRequirement || "",
+      id:id,
     });
   }, [item]);
+
+  useEffect(() => {
+    setIsEdit(["measure"].includes(detailData?.state));
+  }, [detailData?.state]);
 
   const getLocation = () => {
     Taro.getLocation({
@@ -63,51 +81,58 @@ const BizSurveyHouse = (props: IProps) => {
         initialValues={formData}
         form={form}
         footer={
-          <>
-            <Button
-              onClick={(e) => {
-                e.preventDefault();
-                onConfim(formData, "updateBizSurveyHouse");
-              }}
-              formType="submit"
-              block
-              type="primary"
-            >
-              提交
-            </Button>
-          </>
+          isEdit && (
+            <div className="w-full flex justify-between gap-4">
+              <Button
+                onClick={(e) => {
+                  e.preventDefault();
+                  onConfim(formData, 'updateBizSurveyHouse')
+                  console.log(formData, 'formData')
+                }}
+                formType="submit"
+                className="flex-1"
+              >
+                保存
+              </Button>
+              <Button
+                onClick={() => {
+                  onUpdateizApplication && onUpdateizApplication({...(detailData || {}),subState: 'approvaling'})
+                }}
+                formType="submit"
+                className="flex-1"
+                type="primary"
+              >
+                提交
+              </Button>
+            </div>
+          )
         }
       >
         <div className="mb-1">
           <Form.Item label="场景类型" name="sceneType">
-            <Input placeholder="请输入场景类型" type="text" />
+            <Input
+              disabled={!isEdit}
+              placeholder="请输入场景类型"
+              onChange={(value) => {updateFormData('sceneType', value)}}
+              type="text"
+            />
           </Form.Item>
           <Form.Item label="经纬度" name="localtion">
             <div className="flex items-center">
               <Input
+                disabled={!isEdit}
                 value={formData.latitude}
                 onChange={(value) => {
-                  setFormData({
-                    ...formData,
-                    latitude: value,
-                  });
-                  form.setFieldsValue({
-                    latitude: value,
-                  });
+                  updateFormData("latitude", value);
                 }}
                 placeholder="经度"
                 type="text"
               />
               <Input
                 value={formData.longitude}
+                disabled={!isEdit}
                 onChange={(value) => {
-                  setFormData({
-                    ...formData,
-                    longitude: value,
-                  });
-                  form.setFieldsValue({
-                    longitude: value,
-                  });
+                  updateFormData("longitude", value);
                 }}
                 placeholder="纬度"
                 type="text"
@@ -119,8 +144,9 @@ const BizSurveyHouse = (props: IProps) => {
             <div className="flex items-center">
               <Input
                 value={formData.siteNumber}
+                disabled={!isEdit}
                 onChange={(value) => {
-                  updateFormData('siteNumber', value)
+                  updateFormData("siteNumber", value);
                 }}
                 placeholder="请输入场地数量"
                 type="text"
@@ -132,6 +158,7 @@ const BizSurveyHouse = (props: IProps) => {
             <TextArea
               showCount
               rows={6}
+              disabled={!isEdit}
               placeholder="请输入业主要求"
               maxLength={300}
             />
@@ -151,20 +178,21 @@ const BizSurveyHouse = (props: IProps) => {
                   className="flex-1"
                   method="post"
                   name="files"
-                  maxCount={ itemImg?.images?.length || 5}
+                  disabled={!isEdit}
+                  maxCount={itemImg?.images?.length || 5}
                   multiple={true}
                   onSuccess={(param) => {
-                    let fileLists = multipleUploadResult(param as any)
-                    let values = formData.image.map(item => {
+                    let fileLists = multipleUploadResult(param as any);
+                    let values = formData.image.map((item) => {
                       if (item.name === itemImg.name) {
                         return {
                           ...item,
-                          images: fileLists
-                        }
+                          images: fileLists,
+                        };
                       }
-                      return item
-                    })
-                    updateFormData('image', values)
+                      return item;
+                    });
+                    updateFormData("image", values);
                   }}
                   // // deletable={!item?.image?.length}
                   value={itemImg?.images}
