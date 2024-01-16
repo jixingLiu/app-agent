@@ -4,35 +4,44 @@ import { Link } from "@nutui/icons-react-taro";
 import { getBizInstallApplication } from "@/api/install";
 import { formatImageUrl } from "@/utils/index";
 import { multipleUploadResult, uploadResult } from "../../utils/index";
-
+import { API_BASE_URL } from "@/constants/index";
+import { FileItem } from "@nutui/nutui-react/dist/types/packages/uploader";
+import { sourceType } from "../../utils/index";
 interface IProps {
   item: any;
   id: string | number;
   detailData: any;
-  onConfim: (values: any, apiName: string) => void;
+  onConfirm: (values: any, apiName: string) => void;
 }
 
+console.log(API_BASE_URL, "API_BASE_URL");
+
 const BizSignLoan = (props: IProps) => {
-  let { item, id, detailData, onConfim } = props;
-  const uploadUrl = "http://162.14.70.114:8080";
+  let { item, id, detailData, onConfirm } = props;
+  const uploadUrl = API_BASE_URL;
 
   const [form] = Form.useForm();
 
   const [formData, setFormData] = useState<any>({});
   const [isEdit, setIsEdit] = useState<boolean>(false);
 
-  
-
   useEffect(() => {
-    getBizInstallApplication({ id: id }).then((res) => {
-      let { data } = res;
-      setFormData(Object.assign(item || {}, data || {}));
-      form.setFieldsValue({
-        ...item,
-        ...data,
-      });
+    if (!item || !detailData) return
+    setFormData(Object.assign(detailData || {}, item || {}));
+    form.setFieldsValue({
+      ...item,
+      ...detailData,
     });
-  }, [item]);
+    // getBizInstallApplication({ id: id }).then((res) => {
+    //   let { data } = res;
+    //   console.log(data, 'getBizInstallApplication')
+    //   setFormData(Object.assign(item || {}, data || {}));
+    //   form.setFieldsValue({
+    //     ...item,
+    //     ...data,
+    //   });
+    // });
+  }, [item, detailData]);
 
   useEffect(() => {
     setIsEdit(["acceptance"].includes(detailData?.state));
@@ -56,7 +65,7 @@ const BizSignLoan = (props: IProps) => {
             {isEdit && (
               <Button
                 block
-                onClick={() => onConfim(formData, "updateBizSignLoan")}
+                onClick={() => onConfirm(formData, "updateBizSignLoan")}
               >
                 保存
               </Button>
@@ -65,27 +74,31 @@ const BizSignLoan = (props: IProps) => {
         }
       >
         <div className="mb-1 bg-white">
-          <Form.Item label="贷款银行" name="financialProduct">
-            <Input
-              onChange={(value) => {
-                updateFormData("financialProduct", value);
-              }}
-              disabled={!isEdit}
-              maxLength={18}
-              placeholder="请输入贷款银行"
-              type="text"
-            />
-          </Form.Item>
-          <Form.Item label="贷款年限" name="username">
-            <Input
-              onChange={(value) => {
-                updateFormData("username", value);
-              }}
-              disabled={!isEdit}
-              placeholder="请输入贷款年限"
-              type="text"
-            />
-          </Form.Item>
+          {item.financialProduct !== "租赁建站" ? (
+            <>
+              <Form.Item label="贷款银行" name="financialProduct">
+                <Input
+                  onChange={(value) => {
+                    updateFormData("financialProduct", value);
+                  }}
+                  disabled={!isEdit}
+                  maxLength={18}
+                  placeholder="请输入贷款银行"
+                  type="text"
+                />
+              </Form.Item>
+              <Form.Item label="贷款年限" name="loanTerm">
+                <Input
+                  onChange={(value) => {
+                    updateFormData("loanTerm", value);
+                  }}
+                  disabled={!isEdit}
+                  placeholder="请输入贷款年限"
+                  type="number"
+                />
+              </Form.Item>
+            </>
+          ) : null}
           <Form.Item label="业主姓名" name="ownerName">
             <Input
               onChange={(value) => {
@@ -136,11 +149,15 @@ const BizSignLoan = (props: IProps) => {
               key={"idFront"}
               maxCount={1}
               url={`${uploadUrl}/common/upload`}
-              deletable={!item?.idFront}
               uploadLabel="身份证正面"
               disabled={!isEdit}
+              sourceType={sourceType}
               value={formatImageUrl(formData.idFront, "身份证正面") as []}
               className="flex-1"
+              deletable={isEdit}
+              onDelete={() => {
+                updateFormData("idFront", "");
+              }}
               onSuccess={(param) => {
                 let fileLists = uploadResult(param as any);
                 let value = fileLists[0].url;
@@ -152,8 +169,14 @@ const BizSignLoan = (props: IProps) => {
               uploadLabel="身份证反面"
               url={`${uploadUrl}/common/upload`}
               // deletable={!item?.idBack}
+              sourceType={sourceType}
+              disabled={!isEdit}
               value={formatImageUrl(formData.idBack, "身份证发面") as []}
               className="flex-1"
+              deletable={isEdit}
+              onDelete={() => {
+                updateFormData("idBack", "");
+              }}
               onSuccess={(param) => {
                 let fileLists = uploadResult(param as any);
                 let value = fileLists[0].url;
@@ -168,7 +191,7 @@ const BizSignLoan = (props: IProps) => {
               onChange={(value) => {
                 updateFormData("bankCardNumber", value);
               }}
-              maxLength={18}
+              maxLength={19}
               disabled={!isEdit}
               placeholder="请输入银行卡号"
               type="text"
@@ -178,14 +201,18 @@ const BizSignLoan = (props: IProps) => {
           <div className="flex gap-2 px-2 pb-2">
             <Uploader
               url={`${uploadUrl}/common/upload`}
-              deletable={!item?.bankCardFront}
               value={formatImageUrl(formData.bankCardFront, "银行照片") as []}
               onSuccess={(param) => {
                 let fileLists = uploadResult(param as any);
                 let value = fileLists[0].url;
                 updateFormData("bankCardFront", value);
               }}
+              deletable={detailData?.state === "acceptance" ? true : false}
+              onDelete={() => {
+                updateFormData("bankCardFront", "");
+              }}
               maxCount={1}
+              sourceType={sourceType}
               uploadLabel="银行照片"
               disabled={!isEdit}
               className="flex-1"
@@ -201,11 +228,20 @@ const BizSignLoan = (props: IProps) => {
                 url={`${uploadUrl}/common/uploads`}
                 className="flex-1"
                 name="files"
-                maxCount={5}
+                sourceType={sourceType}
+                maxCount={
+                  detailData?.state === "acceptance"
+                    ? 10
+                    : item?.houseOwnership?.length
+                }
                 multiple={true}
                 onSuccess={(param) => {
                   let fileLists = multipleUploadResult(param as any);
                   updateFormData("houseOwnership", fileLists);
+                }}
+                deletable={detailData?.state === "acceptance" ? true : false}
+                onDelete={(file: FileItem, files: FileItem[]) => {
+                  updateFormData("houseOwnership", files);
                 }}
                 disabled={!isEdit}
                 value={formData?.houseOwnership || []}
@@ -218,17 +254,26 @@ const BizSignLoan = (props: IProps) => {
               </div>
               <Uploader
                 uploadLabel="并网申请表"
-                headers={{ custom: "files" }}
                 url={`${uploadUrl}/common/uploads`}
+                className="flex-1"
+                name="files"
+                sourceType={sourceType}
+                maxCount={
+                  detailData?.state === "acceptance"
+                    ? 10
+                    : formData?.gridApplication?.length || 10
+                }
                 value={formData?.gridApplication || []}
-                maxCount={5}
                 multiple={true}
                 disabled={!isEdit}
                 onSuccess={(param) => {
                   let fileLists = multipleUploadResult(param as any);
                   updateFormData("gridApplication", fileLists);
                 }}
-                className="flex-1"
+                deletable={detailData?.state === "acceptance" ? true : false}
+                onDelete={(file: FileItem, files: FileItem[]) => {
+                  updateFormData("gridApplication", files);
+                }}
                 uploadIcon={<Link />}
               />
             </div>

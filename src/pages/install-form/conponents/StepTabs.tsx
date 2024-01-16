@@ -40,11 +40,11 @@ interface IProps {
   projectStates: ProjectStateItem,
   detailData: any,
   onUpdateizApplication?: (values: any) => void,
-  onConfim: (values: any, apiName: string) => void
+  onConfirm: (values: any, apiName: string) => void
 }
 
 function StepTabs(props: IProps) {
-  let { columns, projectStates, id, detailData, onConfim, onUpdateizApplication } = props
+  let { columns, projectStates, id, detailData, onConfirm, onUpdateizApplication } = props
 
 
   const [activeName, setactiveName] = useState<any>([])
@@ -53,9 +53,10 @@ function StepTabs(props: IProps) {
   const generateComponts = (item) => {
     let componentName = item.value
     const DynamicComponent = componentsMap[componentName];
+    // console.log(projectStates, item.value, 'item.value')
     if (DynamicComponent) {
       return (
-        <DynamicComponent detailData={detailData} item={projectStates[item.value]} id={id} onUpdateizApplication={onUpdateizApplication} onConfim={onConfim} />
+        <DynamicComponent detailData={detailData} item={projectStates[item.value]} id={id} onUpdateizApplication={onUpdateizApplication} onConfirm={onConfirm} />
       );
     }
     return null; // Handle unknown component names
@@ -67,13 +68,15 @@ function StepTabs(props: IProps) {
       return false;
     }
 
+    if (state === 'measure') {
+      return ['BizDesignStructural', 'BizElectricalDesign', 'BizCheckGridConnection', 'BizCheckElectrical', 'BizCheckDevice'].includes(item.value);
+    }
+
     if (state === 'design') {
       return ['BizCheckGridConnection', 'BizCheckElectrical', 'BizCheckDevice'].includes(item.value);
     }
 
-    if (state === 'measure') {
-      return ['BizSignLoan','BizSignProductCost', 'BizSignContract','BizDesignStructural', 'BizElectricalDesign', 'BizCheckGridConnection', 'BizCheckElectrical', 'BizCheckDevice'].includes(item.value);
-    }
+   
   
     if (['acceptance'].includes(state)) {
       return [ 'BizSurveyHouse','BizDesignStructural', 'BizElectricalDesign', 'BizCheckGridConnection', 'BizCheckElectrical', 'BizCheckDevice'].includes(item.value);
@@ -90,7 +93,7 @@ function StepTabs(props: IProps) {
       setactiveName(['BizSurveyHouse'])
     }
     if (detailData.state === 'design') {
-      setactiveName(['BizDesignStructural', 'BizSignProBizElectricalDesignductCost'])
+      setactiveName(['BizDesignStructural', 'BizElectricalDesign'])
     }
     if (detailData.state === 'check') {
       setactiveName(['BizCheckDevice', 'BizCheckElectrical', 'BizCheckGridConnection'])
@@ -110,6 +113,7 @@ function StepTabs(props: IProps) {
           (['complete', 'abandon'].includes(detailData?.state)) && <Switch onChange={(value) => {
               if (value) {
                 setactiveName(columns.map(item => item.value))
+                setDefaultChecked(value)
                 return
               }
               setactiveName([])
@@ -125,7 +129,9 @@ function StepTabs(props: IProps) {
       >
         {
           columns.map((item) => (
-            <Collapse.Item key={item.value} disabled={handeleDisabled(item)} title={item.label} name={item.value}>
+            <Collapse.Item key={item.value} disabled={handeleDisabled(item)} title={
+              <div className='text-xs font-semibold'>{item.label}</div>
+            } name={item.value}>
               { generateComponts(item)}
             </Collapse.Item>
           ))

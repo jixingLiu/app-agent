@@ -1,10 +1,10 @@
 module.exports = {
   env: {
     NODE_ENV: '"development"',
-    // API_BASE_URL: 'http://162.14.70.114:8080/' //'/prod-api'
+    API_BASE_URL: 'https://www.ynxrgf.top/test-api/'
   },
   defineConstants: {
-    TARO_API_BASE: 'http://162.14.70.114:8080/'
+    TARO_API_BASE: 'https://www.ynxrgf.top/test-api/'
   },
   mini: {},
   h5: {}

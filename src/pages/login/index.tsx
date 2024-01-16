@@ -1,5 +1,5 @@
 import Taro from "@tarojs/taro";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Form,
   Input,
@@ -11,7 +11,8 @@ import {
 import { login, loginSend } from "@/api/me";
 import "./index.scss";
 
-import LogoSvg from "@/assets/images/logo.svg";
+import LogoSvg from "@/assets/images/logo.png";
+import { getNoticeList } from "@/api/common"
 
 const Login = () => {
   const [checked, setChecked] = useState<boolean>(true);
@@ -19,6 +20,9 @@ const Login = () => {
   const [form] = Form.useForm();
 
   const countDownRef = useRef<any>();
+
+  const [privacyId, setPrivacyId] = useState<string>("");
+  const [secrecyId, setSecrecyId] = useState<string>("");
 
   const [isSending, setIsSending] = useState<boolean>(false);
 
@@ -39,18 +43,19 @@ const Login = () => {
 
     try {
       const response = await login({ phone, inputCode });
-      if (response.code == 500) {
-        Taro.showModal({ title: "当前手机号未注册代理商，请与上级代理商联系" });
+      const { msg, data } = response;
+
+      if (Number(data?.code) === 500) {
+        Taro.showModal({ title: data?.msg || "当前手机号未注册代理商，请与上级代理商联系" });
         return;
       }
-      const { msg, data } = response;
       Taro.setStorageSync("token", msg);
       Taro.setStorage({
         key: "userInfo",
         data: data,
       });
       Taro.switchTab({
-        url: "/pages/install/index",
+        url: "/pages/index/index",
       });
     } catch (error) {
       console.error("登录失败", error);
@@ -69,6 +74,33 @@ const Login = () => {
       countDownRef.current?.start();
     });
   };
+
+  const feetchNoticeList = async (params: noticeParams) => {
+    let { rows } = await getNoticeList(params);
+    return rows;
+  };
+
+  const init = async () => {
+    let listData = await feetchNoticeList({
+      pageNum: 1,
+      pageSize: 2,
+      status: 1,
+      noticeType: 7,
+      noticeTitle: "代理商-",
+    });
+    setPrivacyId(
+      listData.find((item) => item.noticeTitle === "代理商-用户协议")
+        ?.noticeId || ""
+    );
+    setSecrecyId(
+      listData.find((item) => item.noticeTitle === "代理商-隐私协议")
+        ?.noticeId || ""
+    );
+  };
+
+  useEffect(() => {
+    init()
+  }, []);
 
   return (
     <div
@@ -148,8 +180,26 @@ const Login = () => {
               ></Checkbox>
               <div className="text-xs flex items-center text-slate-600">
                 我已经阅读并同意
-                <span className="text-red-600">雄瑞用户协议</span>、
-                <span className="text-red-600">隐私协议</span>
+                <span className="text-red-600"
+                  onClick={() => {
+                    if (!privacyId) {
+                      return
+                    }
+                    Taro.navigateTo({
+                      url: `/pages/article/index?id=${privacyId}&type=protocol`,
+                    });
+                  }}
+                >雄瑞用户协议</span>、
+                <span className="text-red-600"
+                  onClick={() => {
+                    if (!secrecyId) {
+                      return
+                    }
+                    Taro.navigateTo({
+                      url: `/pages/article/index?id=${secrecyId}&type=protocol`,
+                    });
+                  }}
+                >隐私协议</span>
               </div>
             </div>
           </Form>

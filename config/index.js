@@ -4,9 +4,10 @@ const path = require('path')
 const isH5 = process.env.TARO_ENV === "h5";
 const isApp = process.env.TARO_ENV === "rn";
 const WeappTailwindcssDisabled = isH5 || isApp;
+console.log( process.env, ' process.env')
 
 const config = {
-  projectName: 'taro-react-tailwind-vscode-template',
+  projectName: '雄瑞光伏小太阳代理商',
   date: '2023-5-6',
   plugins: ['@tarojs/plugin-html'],
   // designWidth: 750,
@@ -96,7 +97,7 @@ const config = {
     }
   },
   h5: {
-    publicPath: '/',
+    publicPath: '/agent-app/',
     staticDirectory: 'static',
     router: {
       mode: 'browser',
@@ -135,6 +136,9 @@ const config = {
 module.exports = function (merge) {
   if (process.env.NODE_ENV === 'development') {
     return merge({}, config, require('./dev'))
+  }
+  if (process.env.NODE_ENV === 'test') {
+    return merge({}, config, require('./test'))
   }
   return merge({}, config, require('./prod'))
 }

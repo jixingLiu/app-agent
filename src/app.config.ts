@@ -1,15 +1,19 @@
 export default defineAppConfig({
   pages: [
+
     'pages/index/index',
     'pages/login/index',
     'pages/employees/index',
     'pages/install/index',
     'pages/install-form/index',
+    'pages/install-detail/index',
     'pages/mine/index',
     'pages/roi-calculator/index',
     'pages/roi-calculator-detail/index',
     'pages/apply/index',
-    'pages/article/index'
+    'pages/article/index',
+    'pages/article-list/index',
+
   ],
   requiredBackgroundModes: ['audio', 'location'],
   "permission": {

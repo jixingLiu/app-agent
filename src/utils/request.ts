@@ -1,5 +1,6 @@
 import Taro from '@tarojs/taro';
 // import { getToken } from '@/utils/auth';
+import { API_BASE_URL } from '@/constants/index'
 
 const errorCode = {
   '401': '认证失败，无法访问系统资源',
@@ -8,25 +9,9 @@ const errorCode = {
   'default': '系统未知错误，请反馈给管理员'
 }
 
-const envConfig = {
-  development: {
-    API_BASE_URL: 'http://162.14.70.114:8080', // 开发环境的 API 地址
-    //本机测试
-    //API_BASE_URL: 'http://127.0.0.1:8080'
-  },
-  production: {
-    API_BASE_URL: 'http://162.14.70.114:8080/prod-api/', // 生产环境的 API 地址
-  },
-};
-
 // 创建Taro请求实例
 const request = (options): Promise<any> => {
   const token = Taro.getStorageSync('token');
-  // if (!token) {
-  //   Taro.navigateTo({
-  //     url: '/pages/login/index'
-  //   })
-  // }
 
   // 设置请求头
   const headers = {
@@ -39,22 +24,34 @@ const request = (options): Promise<any> => {
 
   const { url, data, method = 'GET' } = options;
   let env = process.env.NODE_ENV || 'development';
+  console.log(env,API_BASE_URL, 'API_BASE_URL')
   // console.log(   envConfig[env].API_BASE_URL + url, 'process.env.NODE_ENV')
   return Taro.request({
-    url: envConfig[env].API_BASE_URL + url,
+    url: API_BASE_URL + url,
     data,
     method,
     header: headers,
   })
     .then((response) => {
       const { statusCode, data } = response;
-      // console.log(response, 'response')
-      if (statusCode === 200) {
+      let { code } = data
+      
+      console.log(code, 'response')
+
+      if (statusCode === 200 && (code === 200 || !code)) {
         return data;
       } else {
-        const errorText = errorCode[statusCode] || errorCode['default'];
+        if (code === 401) {
+          Taro.removeStorageSync('token')
+          Taro.navigateTo({
+            url: '/pages/login/index'
+          })
+        }
+        const errorText = errorCode[code] || errorCode['default'];
         Taro.showToast(errorText)
-        return {}
+        return {
+          data
+        }
         // 处理其他响应状态码
         // return Promise.reject(new Error(`Request failed with status code ${statusCode}`));
       }
@@ -62,6 +59,7 @@ const request = (options): Promise<any> => {
     .catch((error) => {
       // 处理请求错误
       console.error('Error:', error);
+      Taro.showToast({title: '服务器异常，请稍后重试'})
       return Promise.reject(error);
     });
 };

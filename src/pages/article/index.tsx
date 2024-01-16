@@ -19,7 +19,7 @@ interface ArticleProps {
 const Article: React.FC = () => {
   const router = useRouter();
   const routerParams = router.params || {};
-  const { id = '' } = routerParams;
+  const { id = '', type } = routerParams;
 
   const [article, setArticle] = useState<ArticleProps | null>(null);
 
@@ -47,13 +47,20 @@ const Article: React.FC = () => {
     <div>
       {/* <Image src={article.coverImage} /> */}
       <div className='px-4'>
-        <div className='text-slate-800 text-sm items-baseline py-4'>
-          <div className='flex-1 mb-2'>{article.noticeTitle}</div>
-          <div className='flex justify-between items-center text-right text-xs text-gray-600'>
-            <span>作者：{article.updateBy}</span>
-            <span>{formatDate(new Date(article.createTime), 'YYYY-MM-DD')}</span>
-          </div>
-        </div>
+        {
+          !type ? (
+            <div className='text-slate-800 text-sm items-baseline py-4'>
+              <div className='flex-1 mb-2'>{article.noticeTitle}</div>
+              <div className='flex justify-between items-center text-right text-xs text-gray-600'>
+                <span>作者：{article.updateBy}</span>
+                <span>{formatDate(new Date(article.createTime), 'YYYY年MM月DD日')}</span>
+              </div>
+            </div>
+          ) : (
+            <div className='pt-12'></div>
+          )
+        }
+        
         <div className='quill-content'>{ReactHtmlParser(sanitizedContent)}</div>
       </div>
     </div>

@@ -73,15 +73,15 @@ const InstallForm = () => {
 
   const columns: ColumnsData = [
     {
-      label: "贷款资料-签约资料",
+      label: "个人资料-基本资料",
       value: "BizSignLoan",
     },
     {
-      label: "签约资料-产品&造价",
+      label: "个人资料-产品及造价",
       value: "BizSignProductCost",
     },
     {
-      label: "签约资料-安装合同",
+      label: "个人资料-安装合同",
       value: "BizSignContract",
     },
     {
@@ -105,7 +105,7 @@ const InstallForm = () => {
       value: "BizCheckElectrical",
     },
     {
-      label: "验收资料-并网信息",
+      label: "验收资料-并网材料",
       value: "BizCheckGridConnection",
     },
   ];
@@ -149,7 +149,7 @@ const InstallForm = () => {
       BizCheckElectrical: null,
       BizCheckGridConnection: null,
   });
-
+  const ProjectStatesKeys = ['BizSignLoan', 'BizSignProductCost', 'BizSignContract', 'BizSurveyHouse', 'BizDesignStructural', 'BizElectricalDesign', 'BizCheckDevice','BizCheckElectrical', 'BizCheckGridConnection']
 
   const getData = () => {
     let params = {id: id}
@@ -157,8 +157,8 @@ const InstallForm = () => {
     getBizInstallApplication(params).then(res => {
       let { data } = res
       setDetailData(data)
-
     })
+
     Promise.all([
       getBizSignLoan(params), 
       getBizSignProductCost(params),
@@ -170,8 +170,9 @@ const InstallForm = () => {
       getBizCheckElectrical(params),
       getBizCheckGridConnection(params),
     ]).then(res => {
+
       const copyProjectStates = projectStates
-      Object.keys(projectStates).forEach((key, index) => {
+      ProjectStatesKeys.forEach((key, index) => {
         copyProjectStates[key] = res[index]?.data
       })
       setProjectStates((projectStates) => ({
@@ -183,7 +184,7 @@ const InstallForm = () => {
     })
   }
 
-  const onConfim = (values, name) => {
+  const onConfirm = (values, name) => {
     ConfimApiMap[name](values).then(res => {
       Taro.showToast({title: '保存成功', icon: 'success'})
       setTimeout(() => {
@@ -211,7 +212,7 @@ const InstallForm = () => {
           <div className="flex items-center justify-between gap-2">
             <div className="flex-1">
               <div className="flex justify-between mb-2">
-                <div className="text-md">LG{detailData.id}</div>
+                <div className="text-md">XR{detailData.id}</div>
                 <div className="flex gap-1 text-xs text-white">
                   {
                     detailData?.state &&  <div className={AllStateMap[detailData?.state]?.className}>
@@ -237,14 +238,22 @@ const InstallForm = () => {
             <div>地址：{decodeURIComponent(routerParams.address || "")}</div>
             <div>电话：{routerParams.ownerPhone}</div>
           </div>
+          {
+          detailData.subState === 'reject' && detailData.remark && (
+            <div className="flex items-baseline gap-2 text-xs text-red-500 pt-2">
+              驳回原因：{detailData.remark}
+            </div>
+          )
+        }
         </div>
+        
       </div>
 
       <div
         id="contentId"
         className="bg-white  flex-1"
       >
-        { isLoadData ? <StepTabs onUpdateizApplication={onUpdateizApplication} columns={columns} detailData={detailData} id={id} projectStates={projectStates} onConfim={onConfim}></StepTabs> : null }
+        { isLoadData ? <StepTabs onUpdateizApplication={onUpdateizApplication} columns={columns} detailData={detailData} id={id} projectStates={projectStates} onConfirm={onConfirm}></StepTabs> : null }
       </div>
     </div>
   );

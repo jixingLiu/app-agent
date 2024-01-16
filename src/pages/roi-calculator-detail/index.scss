@@ -10,21 +10,21 @@ page {
   font-size: 12px;
 
 }
-.reverse {
-  .nut-table__main__body {
-    .nut-table__main__body__tr {
-      &:nth-child(-n + 15) {
-        background-color: #fca5a5;
-      }
-    }
-  }
-}
-.no-reverse {
-  .nut-table__main__body {
-    .nut-table__main__body__tr {
-      &:nth-child(n + 15) {
-        background-color: #fca5a5;
-      }
-    }
-  }
-}
+// .reverse {
+//   .nut-table__main__body {
+//     .nut-table__main__body__tr {
+//       &:nth-child(-n + 15) {
+//         background-color: #fca5a5;
+//       }
+//     }
+//   }
+// }
+// .no-reverse {
+//   .nut-table__main__body {
+//     .nut-table__main__body__tr {
+//       &:nth-child(n + 15) {
+//         background-color: #fca5a5;
+//       }
+//     }
+//   }
+// }

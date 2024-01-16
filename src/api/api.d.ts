@@ -1,6 +1,7 @@
 interface loginParams {
-  inputCode: string,
+  inputCode: string | number,
   phone: string,
+  isVerify?:boolean
 }
 
 interface createAnyParams {
@@ -31,7 +32,13 @@ interface paramsAgentEmployees {
 interface getInstallListParms {
   pageNum: number,
   pageSize: number,
-  state?: string
+  state?: string,
+  ownerName?: string,
+  agentUserId?: string
+}
+
+interface getInstallCountParms {
+  [key:string] : any,
 }
 
 interface getByIdParams {
@@ -46,5 +53,12 @@ interface updateByIdParams {
 interface noticeParams {
   pageNum: number,
   pageSize: number,
-  noticeType?: number | string
+  status?: number | string,
+  noticeType?: number | string,
+  noticeTitle?: string,
+}
+
+interface getAgentParams {
+  contactPhone?: string,
+  [key: string]: any;
 }

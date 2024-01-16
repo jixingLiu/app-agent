@@ -27,3 +27,25 @@ export function getNoticeById(id) {
     method: 'get',
   })
 }
+
+
+export function getAgent(data: getAgentParams) {
+  return request({
+    url: `/app-agent/agent/list`,
+    method: 'get',
+    data: data
+  })
+}
+
+
+interface wxJsapiSignatureParams {
+  url: string
+}
+export function getWxJsapiSignature(data: wxJsapiSignatureParams) {
+  return request({
+    url: `/app/login/user/wxJsapiSignature`,
+    method: 'get',
+    data: data
+  })
+}
+

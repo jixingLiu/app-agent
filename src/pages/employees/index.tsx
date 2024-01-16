@@ -2,12 +2,11 @@ import React, { useEffect, useRef, useState } from 'react'
 
 import { getAgentEmployees, addAgentEmployees, updateAgentEmployees, deleteAgentEmployees } from '@/api/me'
 import { Skeleton, Checkbox, Divider, Sticky, Button, Dialog } from '@nutui/nutui-react-taro';
-import { Edit, Setting} from '@nutui/icons-react-taro'
+import { Del, Edit, Link } from '@nutui/icons-react-taro'
 import UserForm from './components/UserForm';
 
 import { EnumEmployeesMap } from '@/constants/index'
 import Taro from '@tarojs/taro';
-import { fail } from 'assert';
 
 const Employees = () => {
 
@@ -19,18 +18,18 @@ const Employees = () => {
   const [loading, setLoading] = useState(false)
   const [checked, setChecked] = useState<any[]>([])
 
-  const handleDelete = () => {
-    console.log(checked.length, 'checked.length')
-    if (!checked.length) {
+  const handleDelete = (ids: any) => {
+    let deleteIds = ids || checked
+    if (!deleteIds.length) {
       Taro.showToast({ title: '请先选择员工', icon: 'error' })
       return
     }
     // Dialog.open('dialog')
     Dialog.open('dialog', {
-      title:  `删除 ${checked.length} 个员工`,
+      title:  `删除 ${deleteIds.length} 个员工`,
       content: '删除之后不可恢复，请谨慎操作！',
       onConfirm: () => {
-        deleteAgentEmployees(checked.join(',')).then(() => {
+        deleteAgentEmployees(deleteIds.join(',')).then(() => {
           Taro.showToast({ title: '删除成功', icon: 'success' })
           getList()
           Dialog.close('dialog')
@@ -44,7 +43,7 @@ const Employees = () => {
   }
 
   const onConfirm = async (values: any) => {
-    let params = (Object.assign(values, { agentId: '1714824027148750848' }))
+    let params = (Object.assign(values, { agentId: userInfo.agentId }))
     if (values.id) {
       updateAgentEmployees(params).then(res => {
         Taro.showToast({ title: '添加成功', icon: 'success' })
@@ -61,9 +60,20 @@ const Employees = () => {
     })
   }
 
+  useEffect(() => {
+    Taro.getStorage({
+      key: 'userInfo',
+      success: (res: any) => {
+        let { data } = res
+        setUserInfo(data)
+      },
+      fail: (error) => {console.log(error)}
+    })
+  }, [])
+
   const getList = () => {
     setLoading(true)
-    getAgentEmployees({agentId: '1714824027148750848'}).then(res => {
+    getAgentEmployees({agentId: userInfo.agentId}).then(res => {
       let { rows } = res
       if (rows && rows.length) {
         setEmployees(rows)
@@ -76,20 +86,12 @@ const Employees = () => {
     })
   }
   useEffect(() => {
+    if (!userInfo?.agentId) return
     getList()
     // formRef.current.openPopup()
-  }, [])
+  }, [userInfo?.agentId])
 
-  useEffect(() => {
-    Taro.getStorage({
-      key: 'userInfo',
-      success: (res: any) => {
-        let { data } = res
-        setUserInfo(data)
-      },
-      fail: (error) => {console.log(error)}
-    })
-  }, [])
+  
   return (
     <div className='bg-[#f5f6f7] h-full py-2'>
       {
@@ -103,7 +105,7 @@ const Employees = () => {
                   <div className='rounded-md bg-white px-2 py-4 shadow-md mb-2' key={item.id}>
                     <div className='flex justify-between gap-2'>
                       <div className='flex items-center'>
-                        <Checkbox value={item.id}></Checkbox>
+                        <Checkbox value={item.id} ></Checkbox>
                         <div className='text-sm'>
                           <div className='text-slate-800 mb-2 flex items-center gap-2'>
                             <span>{item.name}</span>
@@ -118,31 +120,38 @@ const Employees = () => {
                           </div>
                         </div>
                       </div>
-
-                      <div className='text-sm flex-1 text-center'>
+                      <div className='text-sm text-center'>
                         <div className='text-red-600 mb-2'>
-                          0
+                          {item.installCount}
                         </div>
                         <div className='text-xs text-slate-600'>
                           安装工单
                         </div>
                       </div>
-                      <div className='text-sm flex-1 text-center'>
-                        <div className='text-red-600 mb-2'>
-                          0
-                        </div>
-                        <div className='text-xs text-slate-600'>
-                          售后工单
-                        </div>
+                      <div className='flex-1 min-w-0 text-gray-600 leading-4'>
+                        {
+                          item.regionName?.map( (item,index) => (
+                            <div className=' overflow-hidden line-clamp-1 text-xs' key={index}>{item}</div>
+                          ))
+                        }
                       </div>
-
                     </div>
                     <Divider style={{borderColor: '#f5f6f7'}} />
                     <div className='flex justify-between text-xs text-center text-red-600'>
-                      <div className='flex-1 flex items-center justify-center gap-2'>
-                        <Setting />
-                        <span>分配权限</span>
+                      <div className='flex-1 flex items-center justify-center gap-2' onClick={() => {
+                        Taro.navigateTo({
+                          url: `/pages/install-detail/index?agentUserId=${item.id}`
+                        })
+                      }}>
+                        <Link />
+                        <span>查看</span>
                       </div>
+                      {/* <div className='flex-1 flex items-center justify-center gap-2' onClick={() => {
+                        handleDelete([item.id])
+                      }}>
+                        <Del />
+                        <span>删除</span>
+                      </div> */}
                       <Divider direction='vertical' style={{borderColor: '#f5f6f7', height: '16px'}} />
                       <div className='flex-1 flex items-center justify-center gap-2' onClick={() => {
                         if (userInfo.type !== 'subAdmin') {

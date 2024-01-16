@@ -17,6 +17,14 @@ export const getInstallList = (data: getInstallListParms) => {
     data: data
   })
 }
+export const getInstallCount = (data: getInstallCountParms) => {
+  return request({
+    url: '/app-agent/install/count',
+    method: 'get',
+    data: data
+  })
+}
+
 
 // 安装申请获取
 export const getBizInstallApplication = (data: getByIdParams) => {

@@ -1,7 +1,7 @@
 
 ![logo](https://pic1.zhimg.com/v2-3ee20468f54bbfefcd0027283b21aaa8_720w.jpg?source=172ae18b)
 
-# taro-react-tailwind-vscode-template
+# 雄瑞光伏小太阳代理商
 
 在 taro 里使用 tailwindcss 的模板项目
 

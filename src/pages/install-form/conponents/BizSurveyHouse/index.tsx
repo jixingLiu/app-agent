@@ -5,22 +5,29 @@ import {
   Input,
   TextArea,
   Uploader,
-} from "@nutui/nutui-react-taro";
+  Video,
+} from "@nutui/nutui-react";
 import { Link, Location2 } from "@nutui/icons-react-taro";
 import { multipleUploadResult } from "../../utils/index";
 import Taro from "@tarojs/taro";
+import { API_BASE_URL } from "@/constants/index";
+import { FileItem } from "@nutui/nutui-react/dist/types/packages/uploader";
+import { sourceType } from '../../utils/index'
+
+
+import './index.scss'
 
 interface IProps {
   item: any;
   id: string | number;
   detailData: any;
   onUpdateizApplication?: (values: any) => void;
-  onConfim: (values: any, apiName: string) => void;
+  onConfirm: (values: any, apiName: string) => void;
 }
 
 const BizSurveyHouse = (props: IProps) => {
-  let { item, id, detailData, onConfim, onUpdateizApplication } = props;
-  const uploadUrl = "http://162.14.70.114:8080";
+  let { item, id, detailData, onConfirm, onUpdateizApplication } = props;
+  const uploadUrl = API_BASE_URL;
 
   const [form] = Form.useForm();
 
@@ -62,6 +69,10 @@ const BizSurveyHouse = (props: IProps) => {
       success: (res) => {
         const { latitude, longitude } = res;
         console.log(latitude, longitude);
+        form.setFieldsValue({
+          latitude: latitude || '',
+          longitude: longitude || ''
+        })
         // this.setState({ latitude, longitude });
       },
       fail: (error) => {
@@ -86,19 +97,25 @@ const BizSurveyHouse = (props: IProps) => {
               <Button
                 onClick={(e) => {
                   e.preventDefault();
-                  onConfim(formData, 'updateBizSurveyHouse')
+                  onConfirm(formData, 'updateBizSurveyHouse')
                   console.log(formData, 'formData')
                 }}
-                formType="submit"
                 className="flex-1"
               >
                 保存
               </Button>
               <Button
                 onClick={() => {
+                  if (!formData.sceneType) {
+                    Taro.showToast({
+                      title: '请填写类型',
+                      icon: 'none',
+                    })
+                    return 
+                  }
+                  onConfirm(formData, 'updateBizSurveyHouse')
                   onUpdateizApplication && onUpdateizApplication({...(detailData || {}),subState: 'approvaling'})
                 }}
-                formType="submit"
                 className="flex-1"
                 type="primary"
               >
@@ -158,6 +175,10 @@ const BizSurveyHouse = (props: IProps) => {
             <TextArea
               showCount
               rows={6}
+              className="w-full"
+              onChange={(value) => {
+                updateFormData('ownerRequirement', value)
+              }}
               disabled={!isEdit}
               placeholder="请输入业主要求"
               maxLength={300}
@@ -165,7 +186,79 @@ const BizSurveyHouse = (props: IProps) => {
           </Form.Item>
         </div>
         <div className=" grid grid-cols-2 gap-2 px-2 pb-2">
-          {item?.image?.map((itemImg, index) => {
+          { formData?.image?.map((itemImg, index) => {
+            if (!isEdit && itemImg.name === '视频' && itemImg.images?.length) {
+              return (
+                <div key={index} className="col-span-2">
+                  <div className=" leading-6 text-xs text-slate-600">
+                    {itemImg.name}
+                  </div>
+                  <Video
+                    source={{
+                      src: itemImg.images[0]?.url,
+                      type: 'video/mp4',
+                    }}
+                    options={{
+                      controls: true,
+                    }}
+                  />
+                </div>
+              )
+            }
+            if (itemImg.name === '视频') {
+              return (
+                <div key={index} className="col-span-2">
+                  <div className=" leading-6 text-xs text-slate-600">
+                    {itemImg.name}
+                  </div>
+                  <Uploader
+                    
+                    key={itemImg.name}
+                    uploadLabel={`${itemImg.name}图`}
+                    url={`${uploadUrl}/common/uploads`}
+                    className="flex-1"
+                    method="post"
+                    accept={'video/*' }
+                    name="files"
+                    disabled={!isEdit}
+                    deletable={isEdit}
+                    
+                    multiple={false}
+                    onSuccess={(param) => {
+                      let fileLists = multipleUploadResult(param as any);
+                      console.log(fileLists,' fileLists')
+                      let values = formData?.image.map((item) => {
+                        if (item.name === itemImg.name) {
+                          return {
+                            ...item,
+                            images: fileLists,
+                          };
+                        }
+                        return item;
+                      });
+                      console.log(values, 'onSuccess')
+                      updateFormData("image", values);
+                    }}
+                    value={itemImg.images}
+                    onDelete={(file: FileItem, files: FileItem[]) => {
+                      let values = formData.image.map((item) => {
+                        if (item.name === itemImg.name) {
+                          return {
+                            ...item,
+                            images: files,
+                          };
+                        }
+                        return item;
+                      });
+                      updateFormData("image", values);
+  
+                    }}
+                    uploadIcon={<Link />}
+                  />
+                </div>
+              );
+            }
+
             return (
               <div key={index}>
                 <div className=" leading-6 text-xs text-slate-600">
@@ -177,9 +270,12 @@ const BizSurveyHouse = (props: IProps) => {
                   url={`${uploadUrl}/common/uploads`}
                   className="flex-1"
                   method="post"
+                  accept={'image/*'}
                   name="files"
                   disabled={!isEdit}
-                  maxCount={itemImg?.images?.length || 5}
+                  deletable={detailData?.state === 'measure'}
+                  
+                  maxCount={detailData?.state ==='measure' ? 10 : itemImg?.images?.length || 10}
                   multiple={true}
                   onSuccess={(param) => {
                     let fileLists = multipleUploadResult(param as any);
@@ -194,8 +290,21 @@ const BizSurveyHouse = (props: IProps) => {
                     });
                     updateFormData("image", values);
                   }}
-                  // // deletable={!item?.image?.length}
-                  value={itemImg?.images}
+                  value={itemImg.images}
+                  onDelete={(file: FileItem, files: FileItem[]) => {
+                    let values = formData.image.map((item) => {
+                      if (item.name === itemImg.name) {
+                        return {
+                          ...item,
+                          images: files,
+                        };
+                      }
+                      return item;
+                    });
+                    console.log(values, 'onDelete')
+                    updateFormData("image", values);
+
+                  }}
                   uploadIcon={<Link />}
                 />
               </div>

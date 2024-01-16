@@ -1,38 +1,53 @@
 import React, { useEffect, useState } from "react";
 import { Button, Form, Input, Uploader } from "@nutui/nutui-react-taro";
 import { Link } from "@nutui/icons-react-taro";
-import { multipleUploadResult } from "../../utils/index";
-
+import { multipleUploadResult, sourceType } from "../../utils/index";
+import { API_BASE_URL } from "@/constants/index";
+import { FileItem } from "@nutui/nutui-react/dist/types/packages/uploader";
 interface IProps {
   item: any;
   id: string | number;
   detailData: any,
-  onConfim: (values: any, apiName: string) => void;
+  onConfirm: (values: any, apiName: string) => void;
+}
+
+interface ImageItem {
+  name: string;
+  images: any[]; // 或者是具体的图片路径类型
+}
+
+interface FormData {
+  id: string | number;
+  gridConnectionLineLocation?: string;
+  inverterLocation?: string;
+  image: ImageItem[];
+  // 其他表单字段
 }
 
 const BizElectricalDesign = (props: IProps) => {
-  let { item, id, detailData, onConfim } = props;
-  const uploadUrl = "http://162.14.70.114:8080";
+  let { item, id, detailData, onConfirm } = props;
+  const uploadUrl = API_BASE_URL;
 
   const [form] = Form.useForm();
 
-  const [formData, setFormData] = useState<any>({});
+  const [formData, setFormData] = useState<FormData>({ ...item, id });
   const [isEdit, setIsEdit] = useState<boolean>(false);
 
-  const updateFormData = (key: string, value: any) => {
-    const updatedData = { ...formData, [key]: value };
-    setFormData(updatedData);
-    form.setFieldsValue(updatedData);
+  const updateSubImages = (subImages: FileItem[], subName: string, fileLists: FileItem[]) => {
+    return subImages.map(subImgItem => subImgItem.name === subName ? { ...subImgItem, images: fileLists } : subImgItem);
+  };
+  const updateImageFormData = (name: string, subName: string, fileLists: FileItem[]) => {
+    setFormData(prevFormData => ({
+      ...prevFormData,
+      image: prevFormData.image?.map(imgItem => 
+        imgItem.name === name ? { ...imgItem, images: updateSubImages(imgItem.images, subName, fileLists) } : imgItem
+      )
+    }));
   };
 
-  console.log(item, "item");
   useEffect(() => {
     setFormData(Object.assign(item || {}, {id}));
-    form.setFieldsValue({
-      ...item,
-      id
-    });
-  }, [item]);
+  }, [item, id]);
 
   useEffect(() => {
     setIsEdit(['check'].includes(detailData?.state))
@@ -50,7 +65,7 @@ const BizElectricalDesign = (props: IProps) => {
             <Button
               onClick={(e) => {
                 e.preventDefault();
-                onConfim(formData, "updateBizCheckElectrical");
+                onConfirm(formData, "updateBizCheckElectrical");
               }}
               formType="submit"
               block
@@ -61,47 +76,39 @@ const BizElectricalDesign = (props: IProps) => {
         }
       >
         <div className="px-2 pb-2">
-          {item?.image?.map((itemImg, index) => {
+          {formData?.image?.map((itemImg, index) => {
             return (
               <div key={encodeURI(itemImg.name)} className="w-full">
-                <div className=" leading-6 text-xs text-slate-600">
+                <div className=" leading-6 text-[28px] pt-2 text-slate-600">
                   {itemImg.name}
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
                   {itemImg.images?.map((subItem) => (
                     <div key={encodeURI(subItem.name)}>
-                      <div className=" leading-6 text-xs text-slate-400">
+                      <div className=" leading-6 text-[24px] text-slate-400">
                         {subItem.name}
                       </div>
                       <Uploader
                         uploadLabel={`${subItem.name}图`}
+                        sourceType={sourceType}
+
                         url={`${uploadUrl}/common/uploads`}
                         className="flex-1"
                         method="post"
                         name="files"
-                        maxCount={5}
                         multiple={true}
                         disabled={!isEdit}
                         value={subItem.images}
                         onSuccess={(param) => {
                           let fileLists = multipleUploadResult(param as any);
-                          let values = formData.image.map((item) => {
-                            return {
-                              ...item,
-                              images: item.images?.map( (fromSubItem) => {
-                                if (fromSubItem.name === subItem.name) {
-                                  return {
-                                    ...fromSubItem,
-                                    images: fileLists
-                                  }
-                                }
-                                return fromSubItem
-                              })
-                            }
-                            return item;
-                          });
-                          updateFormData('image', values)
+                          updateImageFormData( itemImg.name,subItem.name, fileLists);
+                        }}
+                        maxCount={isEdit ? 10 : itemImg?.images?.length ?? 10}
+                        deletable={isEdit}
+                        onDelete={(file: FileItem, files: FileItem[]) => {
+                          console.log(subItem.name, files)
+                          updateImageFormData(itemImg.name,subItem.name, files);
                         }}
                         uploadIcon={<Link />}
                       />

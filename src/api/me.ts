@@ -36,6 +36,13 @@ export const getAgentEmployees = (data) => {
   })
 }
 
+export const getAgentEmployeesById = (id) => {
+  return request({
+    url: `/app-agent/agent/user/${id}`,
+    method: 'get',
+  })
+}
+
 export const addAgentEmployees = (data) => {
   return request({
     url: '/app-agent/agent/user',

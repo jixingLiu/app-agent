@@ -12,8 +12,8 @@ import CousPicker from "@/components/CousPicker";
 
 import { BankList, RepaymentPeriodList, DownPaymentRatios, RepaymentList } from './const'
 const listData1 = [
-  { value: '600', text: 'HI-MO6',},
-  { value: '500', text: 'HI-MO5',},
+  { value: '0.58', text: 'HI-MO6',},
+  { value: '0.58', text: 'HI-MO5',},
 ]
 
 const DividerStyles = {
@@ -32,9 +32,9 @@ const RoiCalculator = () => {
 
   useEffect(() => {
     form.setFieldsValue({
-      componentPower: 6,
+      componentPower: 580,
       back: 'ICBC',
-      repaymentPeriod: '10',
+      repaymentPeriod: '15',
       repayment: 'interest',
       powerGeneration: '1527',
       electricityPrice: '0.3360',
@@ -50,9 +50,19 @@ const RoiCalculator = () => {
         labelPosition="right"
       
         onFinish={(valuse) => {
+        
+           let {back,repaymentPeriod,  componentCount, componentCapacity, componentPower} = valuse
+           if (!componentCount || !componentPower) {
+            Taro.showToast({
+              title:'请输入组件块数或组件功率',
+              icon:'none'
+            })
+            return
+           }
           console.log(valuse, 'valuse')
+          let params = `back=${back}&repaymentPeriod=${repaymentPeriod}&componentCapacity=${componentCapacity}&componentCount=${componentCount}`
           Taro.navigateTo({
-            url: '/pages/roi-calculator-detail/index',
+            url: `/pages/roi-calculator-detail/index?${params}`,
           })
         }}
         footer={
@@ -64,13 +74,13 @@ const RoiCalculator = () => {
         }
       >
         <div className="px-4">
-          <div className="flex justify-between items-center text-xs text-slate-600 mb-2">
+          {/* <div className="flex justify-between items-center text-xs text-slate-600 mb-2">
             <div>测算区域</div>
             <div className="gap-4 flex items-center">
               <span>云省-昆明市</span>
               <Retweet />
             </div>
-          </div>
+          </div> */}
           <Form.Item
             label="年发电等效小时数"
             name="powerGeneration"
@@ -105,7 +115,7 @@ const RoiCalculator = () => {
           <div className="flex justify-between items-center text-xs text-slate-600 mb-2">
             <div>电站基本信息</div>
           </div>
-          <Form.Item
+          {/* <Form.Item
             label="组件型号"
             name="componentModel"
           >
@@ -114,7 +124,7 @@ const RoiCalculator = () => {
                 name: val
               })
             } }></CousPicker>
-          </Form.Item>
+          </Form.Item> */}
           <Form.Item
             label="组件面积"
             name="componentArea"
@@ -140,9 +150,12 @@ const RoiCalculator = () => {
                 onChange={(value) => {
                   let componentArea = form.getFieldValue('componentArea')
                   let componentPower = form.getFieldValue('componentPower')
+                  console.log(value,componentArea, componentPower, 'value')
+
                   let powerStationArea = (componentArea * (Number(value) || 0)).toFixed(2)
-                  let componentCapacity = (componentPower * (Number(value) || 0)).toFixed(2)
+                  let componentCapacity = (componentPower / 1000 * (Number(value) || 0)).toFixed(2)
                   form.setFieldsValue({
+                    componentCount: value,
                     powerStationArea: powerStationArea,
                     componentCapacity: componentCapacity,
                   })
@@ -160,11 +173,30 @@ const RoiCalculator = () => {
             label="组件功率"
             name="componentPower"
           >
-            <CousPicker  listOptions={listData1} defaultValue="6" handleConfirm={ (val: any) => {
+            <div className="flex items-center justify-between border">
+              <Input
+                placeholder="请输入组件功率"
+                type="number"
+                defaultValue="580"
+                onChange={(value) => {
+                  let componentCounts = form.getFieldValue('componentCount')
+                  let componentCapacity = (Number(value) / 1000 * (Number(componentCounts) || 0)).toFixed(2)
+
+                  setComponentCapacity(componentCapacity)
+                  form.setFieldsValue({
+                    componentPower: value,
+                    componentCapacity: componentCapacity
+                  })
+                }}
+                // value={componentPower}
+              />
+              <span>W</span>
+            </div>
+            {/* <CousPicker  listOptions={listData1} defaultValue="0.58" handleConfirm={ (val: any) => {
               form.setFieldsValue({
                 componentPower: val
               })
-            } }></CousPicker>
+            } }></CousPicker> */}
           </Form.Item>
           <Form.Item
             label="组件容量"
@@ -229,7 +261,7 @@ const RoiCalculator = () => {
               repaymentPeriod: value
             })
           }} 
-          defaultValue="10" direction="horizontal">
+          defaultValue="15" direction="horizontal">
             {
               RepaymentPeriodList.map(item => (
                 <Radio shape="button" key={item.value} value={item.value}>

@@ -1,20 +1,22 @@
 import React, { useEffect, useState } from "react";
 import { Button, Form, Input, Uploader } from "@nutui/nutui-react-taro";
 import { Link } from "@nutui/icons-react-taro";
-import { multipleUploadResult } from "../../utils/index";
+import { multipleUploadResult, sourceType } from "../../utils/index";
+import { API_BASE_URL } from "@/constants/index";
+import { FileItem } from "@nutui/nutui-react-taro/dist/types/packages/uploader/file-item";
 
 interface IProps {
   item: any;
   id: string | number;
   detailData: any;
   onUpdateizApplication?: (values: any) => void;
-  onConfim: (values: any, apiName: string) => void;
+  onConfirm: (values: any, apiName: string) => void;
 }
 
 const BizCheckGridConnection = (props: IProps) => {
-  let { item, id, detailData, onConfim, onUpdateizApplication } = props;
+  let { item, id, detailData, onConfirm, onUpdateizApplication } = props;
   const [isEdit, setIsEdit] = useState<boolean>(false);
-  const uploadUrl = "http://162.14.70.114:8080";
+  const uploadUrl = API_BASE_URL;
 
   const [form] = Form.useForm();
 
@@ -24,6 +26,14 @@ const BizCheckGridConnection = (props: IProps) => {
     const updatedData = { ...formData, [key]: value };
     setFormData(updatedData);
     form.setFieldsValue(updatedData);
+  };
+  const updateImageFormData = (name: string, fileLists: FileItem[]) => {
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      image: prevFormData.image.map((imgItem) =>
+        imgItem.name === name ? { ...imgItem, images: fileLists } : imgItem
+      ),
+    }));
   };
 
   useEffect(() => {
@@ -52,7 +62,7 @@ const BizCheckGridConnection = (props: IProps) => {
                 <Button
                   onClick={(e) => {
                     e.preventDefault();
-                    onConfim(formData, "updateBizCheckGridConnection");
+                    onConfirm(formData, "updateBizCheckGridConnection");
                     console.log(formData, "formData");
                   }}
                   formType="submit"
@@ -62,6 +72,7 @@ const BizCheckGridConnection = (props: IProps) => {
                 </Button>
                 <Button
                   onClick={() => {
+                    onConfirm(formData, "updateBizCheckGridConnection");
                     onUpdateizApplication &&
                       onUpdateizApplication({
                         ...(detailData || {}),
@@ -104,36 +115,32 @@ const BizCheckGridConnection = (props: IProps) => {
           </Form.Item>
         </div>
         <div className=" grid grid-cols-2 gap-2 px-2 pb-2">
-          {item?.image?.map((itemImg, index) => {
+          {formData?.image?.map((itemImg, index) => {
             return (
               <div key={index}>
-                <div className=" leading-6 text-xs text-slate-600">
+                <div className=" leading-6 text-[24px] text-slate-600">
                   {itemImg.name}
                 </div>
                 <Uploader
-                  key={itemImg.name}
+                  key={encodeURI(itemImg.name)}
                   uploadLabel={`${itemImg.name}图`}
                   url={`${uploadUrl}/common/uploads`}
+                  sourceType={sourceType}
+
                   className="flex-1"
-                  method="post"
                   name="files"
-                  maxCount={itemImg?.images?.length || 5}
                   multiple={true}
                   disabled={!isEdit}
                   onSuccess={(param) => {
                     let fileLists = multipleUploadResult(param as any);
-                    let values = formData.image.map((item) => {
-                      if (item.name === itemImg.name) {
-                        return {
-                          ...item,
-                          images: fileLists,
-                        };
-                      }
-                      return item;
-                    });
-                    updateFormData("image", values);
+                    updateImageFormData(itemImg.name, fileLists)
                   }}
-                  deletable={!item?.image?.length}
+                  deletable={isEdit}
+                  maxCount={ isEdit ? 10 : itemImg?.images?.length ?? 10}
+
+                  onDelete={(file: FileItem, files: FileItem[]) => {
+                    updateImageFormData(itemImg.name, files)
+                  }}
                   value={itemImg?.images}
                   uploadIcon={<Link />}
                 />

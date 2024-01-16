@@ -1,26 +1,22 @@
 import React, { useEffect, useState } from "react";
-import {
-  Button,
-  Form,
-  Input,
-  TextArea,
-  Uploader,
-} from "@nutui/nutui-react-taro";
-import { Link, Location2 } from "@nutui/icons-react-taro";
-import { multipleUploadResult } from "../../utils/index";
-import Taro from "@tarojs/taro";
+import { Button, Form, Input, Uploader } from "@nutui/nutui-react-taro";
+import { Link } from "@nutui/icons-react-taro";
+import { multipleUploadResult, sourceType } from "../../utils/index";
+
+import { API_BASE_URL } from "@/constants/index";
+import { FileItem } from "@nutui/nutui-react-taro/dist/types/packages/uploader/file-item";
 
 interface IProps {
   item: any;
   id: string | number;
   detailData: any;
   onUpdateizApplication?: (values: any) => void;
-  onConfim: (values: any, apiName: string) => void;
+  onConfirm: (values: any, apiName: string) => void;
 }
 
 const BizElectricalDesign = (props: IProps) => {
-  let { item, id, detailData, onConfim, onUpdateizApplication } = props;
-  const uploadUrl = "http://162.14.70.114:8080";
+  let { item, id, detailData, onConfirm, onUpdateizApplication } = props;
+  const uploadUrl = API_BASE_URL;
 
   const [form] = Form.useForm();
 
@@ -30,21 +26,29 @@ const BizElectricalDesign = (props: IProps) => {
   const updateFormData = (key: string, value: any) => {
     const updatedData = { ...formData, [key]: value };
     setFormData(updatedData);
-    form.setFieldsValue(updatedData);
+  };
+
+  const updateImageFormData = (name: string, fileLists: FileItem[]) => {
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      image: prevFormData.image?.map((imgItem) =>
+        imgItem.name === name ? { ...imgItem, images: fileLists } : imgItem
+      ),
+    }));
   };
 
   useEffect(() => {
-    setFormData(Object.assign(item || {}, { id }));
-    form.setFieldsValue({
-      ...item,
-      id,
-    });
-  }, [item]);
+    console.log(Object.assign(item || {}, { id }), 'formData')
+    if (!item || !id) return
+    
+    setFormData(() => ({...item, id}));
+  }, [item, id]);
 
   useEffect(() => {
     setIsEdit(["design"].includes(detailData?.state));
   }, [detailData?.state]);
 
+  if (!formData.id) return null
   return (
     <div>
       <Form
@@ -58,7 +62,7 @@ const BizElectricalDesign = (props: IProps) => {
               <Button
                 onClick={(e) => {
                   e.preventDefault();
-                  onConfim(formData, "updateBizElectricalDesign");
+                  onConfirm(formData, "updateBizElectricalDesign");
                 }}
                 formType="submit"
                 className="flex-1"
@@ -67,6 +71,7 @@ const BizElectricalDesign = (props: IProps) => {
               </Button>
               <Button
                 onClick={() => {
+                  onConfirm(formData, "updateBizElectricalDesign");
                   onUpdateizApplication &&
                     onUpdateizApplication({
                       ...(detailData || {}),
@@ -77,7 +82,7 @@ const BizElectricalDesign = (props: IProps) => {
                 className="flex-1"
                 type="primary"
               >
-                提交
+                提 交
               </Button>
             </div>
           )
@@ -89,6 +94,7 @@ const BizElectricalDesign = (props: IProps) => {
               onChange={(value) => {
                 updateFormData("gridConnectionLineLocation", value);
               }}
+              value={formData.gridConnectionLineLocation}
               disabled={!isEdit}
               placeholder="请输入并网线位置"
               type="text"
@@ -99,6 +105,7 @@ const BizElectricalDesign = (props: IProps) => {
               onChange={(value) => {
                 updateFormData("inverterLocation", value);
               }}
+              value={formData?.inverterLocation}
               disabled={!isEdit}
               placeholder="请输入逆变电器位置"
               type="text"
@@ -106,55 +113,34 @@ const BizElectricalDesign = (props: IProps) => {
           </Form.Item>
         </div>
         <div className=" grid grid-cols-2 gap-2 px-2 pb-2">
-          {item?.image?.map((itemImg, index) => {
-            return (
-              <div key={index}>
-                <div className=" leading-6 text-xs text-slate-600">
-                  {itemImg.name}
-                </div>
-                <Uploader
-                  key={itemImg.name}
-                  uploadLabel={`${itemImg.name}图`}
-                  url={`${uploadUrl}/common/uploads`}
-                  className="flex-1"
-                  method="post"
-                  name="files"
-                  maxCount={5}
-                  multiple={true}
-                  disabled={!isEdit}
-                  onSuccess={(param) => {
-                    let fileLists = multipleUploadResult(param as any);
-                    setFormData({
-                      ...formData,
-                      image: formData.image.map((item) => {
-                        if (item.name === itemImg.name) {
-                          return {
-                            ...item,
-                            images: fileLists,
-                          };
-                        }
-                        return item;
-                      }),
-                    });
-                    form.setFieldsValue({
-                      image: formData.image.map((item) => {
-                        if (item.name === itemImg.name) {
-                          return {
-                            ...item,
-                            images: fileLists,
-                          };
-                        }
-                        return item;
-                      }),
-                    });
-                  }}
-                  // // deletable={!item?.image?.length}
-                  value={itemImg?.images}
-                  uploadIcon={<Link />}
-                />
+          {formData.image?.map((itemImg) => (
+            <div key={itemImg.name}>
+              <div className="leading-6 text-xs text-slate-600">
+                {itemImg.name}图
               </div>
-            );
-          })}
+              <Uploader
+                uploadLabel={`${itemImg.name}图`}
+                sourceType={sourceType}
+
+                url={`${uploadUrl}/common/uploads`}
+                className="flex-1"
+                name="files"
+                multiple={true}
+                disabled={!isEdit}
+                onSuccess={(param) => {
+                  const fileLists = multipleUploadResult(param as any); // 类型断言
+                  updateImageFormData(itemImg.name, fileLists);
+                }}
+                value={itemImg.images}
+                maxCount={isEdit ? 10 : itemImg.images?.length ?? 0}
+                deletable={isEdit}
+                onDelete={(file: FileItem, files: FileItem[]) => {
+                  updateImageFormData(itemImg.name, files);
+                }}
+                uploadIcon={<Link />}
+              />
+            </div>
+          ))}
         </div>
       </Form>
     </div>

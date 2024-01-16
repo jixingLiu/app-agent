@@ -282,7 +282,7 @@ const Install = () => {
   }
 
   useEffect(() => {
-    getInstallCount().then(res => {
+    getInstallCount({agentUserId: agentUserId || ''}).then(res => {
       if (!res?.length) {
         setTabList(() => defaultTabList)
         return
